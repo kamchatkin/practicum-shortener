@@ -2,8 +2,8 @@ package app
 
 import "math/rand"
 
-var words = []rune{}
-var words_quantity = 0
+var words []rune
+var wordsQuantity = 0
 
 func init() {
 	for a := 'a'; a < 'z'; a++ {
@@ -17,7 +17,7 @@ func init() {
 	for a := '0'; a < '9'; a++ {
 		words = append(words, a)
 	}
-	words_quantity = len(words) - 1
+	wordsQuantity = len(words) - 1
 }
 
 // LENGTH длина алиаса для сокращения
@@ -27,7 +27,7 @@ const LENGTH = 5
 func shortness() string {
 	var str []rune
 	for range LENGTH {
-		str = append(str, words[randInt(0, words_quantity)])
+		str = append(str, words[randInt(0, wordsQuantity)])
 	}
 
 	return string(str)
