@@ -50,5 +50,5 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprint(w, fmt.Sprintf("%s://%s/%s", proto, r.Host, alias))
+	_, _ = fmt.Fprintf(w, "%s://%s/%s", proto, r.Host, alias)
 }
