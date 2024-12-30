@@ -52,6 +52,7 @@ func TestSynonymHandler(t *testing.T) {
 			SynonymHandler(w, r)
 
 			res := w.Result()
+			defer res.Body.Close()
 
 			assert.Equal(t, test.expectedCode, res.StatusCode)
 

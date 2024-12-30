@@ -45,6 +45,7 @@ func TestRedirect(t *testing.T) {
 			RedirectHandler(w, r)
 
 			res := w.Result()
+			defer res.Body.Close()
 
 			assert.Equal(t, tc.expectedCode, res.StatusCode, tc.codeMsg)
 			if tc.expectedBody == "" {

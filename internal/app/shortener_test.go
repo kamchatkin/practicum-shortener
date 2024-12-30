@@ -17,6 +17,7 @@ func TestShortener(t *testing.T) {
 	SynonymHandler(w, r)
 
 	resp := w.Result()
+	defer resp.Body.Close()
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	shortURL := w.Body.String()
 	_, err := url.ParseRequestURI(shortURL)
@@ -31,6 +32,7 @@ func TestShortener(t *testing.T) {
 	RedirectHandler(w2, r2)
 
 	resp2 := w2.Result()
+	defer resp2.Body.Close()
 	assert.Equal(t, http.StatusTemporaryRedirect, resp2.StatusCode)
 	assert.Equal(t, baseURL, w2.Header().Get("Location"))
 }
