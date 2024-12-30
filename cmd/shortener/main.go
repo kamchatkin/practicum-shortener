@@ -10,7 +10,7 @@ func main() {
 	r := chi.NewRouter()
 
 	// Сокращение
-	r.Post("/", app.RedirectHandler)
+	r.Post("/", app.SynonymHandler)
 
 	// Переадресация
 	r.Get("/{id}", app.RedirectHandler)
