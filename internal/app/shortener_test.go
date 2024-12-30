@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -28,7 +30,11 @@ func TestShortener(t *testing.T) {
 	w2 := httptest.NewRecorder()
 
 	r2 := httptest.NewRequest(http.MethodGet, "/", nil)
-	r2.SetPathValue("id", parts[len(parts)-1])
+	//r2.SetPathValue("id", parts[len(parts)-1])
+	r2ctx := chi.NewRouteContext()
+	r2ctx.URLParams.Add("id", parts[len(parts)-1])
+	r2 = r2.WithContext(context.WithValue(r2.Context(), chi.RouteCtxKey, r2ctx))
+
 	RedirectHandler(w2, r2)
 
 	resp2 := w2.Result()

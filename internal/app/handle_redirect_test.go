@@ -1,7 +1,9 @@
 package app
 
 import (
+	"context"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -41,6 +43,11 @@ func TestRedirect(t *testing.T) {
 			r := httptest.NewRequest(tc.method, "/", nil)
 			r.SetPathValue("id", tc.url)
 			w := httptest.NewRecorder()
+
+			rctx := chi.NewRouteContext()
+			rctx.URLParams.Add("id", tc.url)
+
+			r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx))
 
 			RedirectHandler(w, r)
 
