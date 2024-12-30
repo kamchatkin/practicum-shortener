@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/go-chi/chi/v5"
 	"net/http"
 )
 
@@ -10,7 +11,8 @@ var db = map[string]string{
 
 // RedirectHandler Поиск сокращения и переадресация
 func RedirectHandler(w http.ResponseWriter, r *http.Request) {
-	alias := r.PathValue("id")
+	alias := chi.URLParam(r, "id")
+
 	var toURL string
 	var ok bool
 	if toURL, ok = db[alias]; !ok {
