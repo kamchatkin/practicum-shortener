@@ -2,7 +2,7 @@ package app
 
 import (
 	"fmt"
-	"github.com/kamchatkin/practicum-shortener/cmd/config"
+	"github.com/kamchatkin/practicum-shortener/config"
 	"io"
 	"net/http"
 	"net/url"
