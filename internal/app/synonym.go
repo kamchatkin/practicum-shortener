@@ -6,15 +6,15 @@ var words []rune
 var wordsQuantity = 0
 
 func init() {
-	for a := 'a'; a < 'z'; a++ {
+	for a := 'a'; a <= 'z'; a++ {
 		words = append(words, a)
 	}
 
-	for a := 'A'; a < 'Z'; a++ {
+	for a := 'A'; a <= 'Z'; a++ {
 		words = append(words, a)
 	}
 
-	for a := '0'; a < '9'; a++ {
+	for a := '0'; a <= '9'; a++ {
 		words = append(words, a)
 	}
 	wordsQuantity = len(words) - 1

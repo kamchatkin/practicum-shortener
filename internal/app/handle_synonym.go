@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/kamchatkin/practicum-shortener/cmd/config"
 	"io"
 	"net/http"
 	"net/url"
@@ -49,6 +50,11 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 		proto = "https"
 	}
 
+	host := r.Host
+	if config.Config.ShortHost != "" {
+		host = config.Config.ShortHost
+	}
+
 	w.WriteHeader(http.StatusCreated)
-	_, _ = fmt.Fprintf(w, "%s://%s/%s", proto, r.Host, alias)
+	_, _ = fmt.Fprintf(w, "%s://%s/%s", proto, host, alias)
 }
