@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/kamchatkin/practicum-shortener/cmd/config"
+	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
