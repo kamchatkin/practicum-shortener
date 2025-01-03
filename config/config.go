@@ -61,7 +61,7 @@ func confShortHost(shortHost string) {
 
 	parsedURL, err := url.Parse(shortHost)
 	if err != nil || parsedURL.Host == "" {
-		fmt.Println(fmt.Sprintf("Не удалось разобрать URL для подстановки в сокращенную ссылку. Получено: %s", shortHost))
+		fmt.Printf("Не удалось разобрать URL для подстановки в сокращенную ссылку. Получено: %s", shortHost)
 		panic(err)
 	}
 
