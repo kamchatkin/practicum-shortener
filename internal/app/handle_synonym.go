@@ -45,16 +45,19 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 
 	db[alias] = string(sourceURL)
 
+	w.WriteHeader(http.StatusCreated)
+
+	if config.Config.ShortHost != "" {
+		//if strings.HasPrefix(config.Config.ShortHost, "http") {
+		fmt.Fprintf(w, "%s://%s/%s", config.Config.ShortHostURL.Scheme, config.Config.ShortHostURL.Host, alias)
+		//}
+
+		return
+	}
+
 	proto := "http"
 	if r.TLS != nil {
 		proto = "https"
 	}
-
-	host := r.Host
-	if config.Config.ShortHost != "" {
-		host = config.Config.ShortHost
-	}
-
-	w.WriteHeader(http.StatusCreated)
-	_, _ = fmt.Fprintf(w, "%s://%s/%s", proto, host, alias)
+	_, _ = fmt.Fprintf(w, "%s://%s/%s", proto, r.Host, alias)
 }

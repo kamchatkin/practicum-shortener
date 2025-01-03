@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/kamchatkin/practicum-shortener/cmd/config"
 	"github.com/stretchr/testify/assert"
@@ -46,10 +47,12 @@ func TestShortener(t *testing.T) {
 }
 
 func TestShortenerWithConfig(t *testing.T) {
-	shortHost := "ya.ru"
-
-	config.Parse()
-	config.Config.ShortHost = shortHost
+	shortHost := "http://ya.ru"
+	parsedShortHost, err := url.Parse(shortHost)
+	config.Config = config.ConfigType{
+		ShortHost:    shortHost,
+		ShortHostURL: parsedShortHost,
+	}
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(baseURL))
@@ -59,7 +62,8 @@ func TestShortenerWithConfig(t *testing.T) {
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	shortURL := w.Body.String()
-	_url, err := url.ParseRequestURI(shortURL)
-	assert.Nil(t, err, "В ответ на сокращение ожидается URL")
-	assert.Equal(t, _url.Host, shortHost, "Значение shortHost конфигурации должно учитываться в короткой ссылке")
+	_url, err := url.Parse(shortURL)
+
+	assert.Nil(t, err, fmt.Sprintf("В ответ на сокращение ожидается URL, получено: %s", err))
+	assert.Equal(t, shortHost, fmt.Sprintf("%s://%s", _url.Scheme, _url.Host), "Значение shortHost конфигурации должно учитываться в короткой ссылке")
 }
