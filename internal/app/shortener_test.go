@@ -48,7 +48,7 @@ func TestShortener(t *testing.T) {
 
 func TestShortenerWithConfig(t *testing.T) {
 	shortHost := "http://ya.ru"
-	parsedShortHost, err := url.Parse(shortHost)
+	parsedShortHost, _ := url.Parse(shortHost)
 	config.Config = config.ConfigType{
 		ShortHost:    shortHost,
 		ShortHostURL: parsedShortHost,
