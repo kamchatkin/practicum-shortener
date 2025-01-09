@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/kamchatkin/practicum-shortener/cmd/config"
+	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -48,11 +48,8 @@ func TestShortener(t *testing.T) {
 
 func TestShortenerWithConfig(t *testing.T) {
 	shortHost := "http://ya.ru"
-	parsedShortHost, _ := url.Parse(shortHost)
-	config.Config = config.ConfigType{
-		ShortHost:    shortHost,
-		ShortHostURL: parsedShortHost,
-	}
+
+	config.HookShortHost(shortHost)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(baseURL))
