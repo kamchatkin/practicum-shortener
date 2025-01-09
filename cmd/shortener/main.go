@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/app"
@@ -16,8 +17,13 @@ func main() {
 	// Переадресация
 	r.Get("/{id}", app.RedirectHandler)
 
-	config.Parse()
-	if err := http.ListenAndServe(config.Config.Addr, r); err != nil {
+	cfg, err := config.Config()
+	if err != nil {
+		fmt.Printf("Ошибка подготовки конфигурации приложения. Надо ли в этом случае давать запускать приложение?\n%s", err)
+		panic(err)
+	}
+
+	if err := http.ListenAndServe(cfg.Addr, r); err != nil {
 		panic(err)
 	}
 }

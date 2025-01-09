@@ -2,69 +2,104 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"github.com/caarlos0/env/v11"
+	"github.com/go-playground/validator/v10"
 	"net/url"
 )
 
+const DefaultAddr = ":8080"
+
+const DefaultShortHost = ""
+
 type ConfigType struct {
 	// Addr адрес для запуска этого приложения
-	Addr string `env:"SERVER_ADDRESS"`
+	Addr string `validate:"hostname_port" env:"SERVER_ADDRESS"`
 
 	// ShortHost подменный хост в сокращенном УРЛ
-	ShortHost string `env:"BASE_URL"`
+	ShortHost string `env:"BASE_URL" validate:"omitempty,http_url"`
 
 	ShortHostURL *url.URL
+
+	// Возможность принудительного изменения полей. Исходно для тестов
+	forceAddr      string
+	forceShortHost string
 }
 
-var Config = ConfigType{}
+var hookAddr = ""
 
-func Parse() {
-	if Config != (ConfigType{}) {
-		return
+func HookAddr(val string) {
+	hookAddr = val
+}
+
+var hookShortHost = ""
+
+func HookShortHost(val string) {
+	hookShortHost = val
+}
+
+// Config Конфигурация на момент запуска приложения
+func Config() (*ConfigType, error) {
+	cfg := &ConfigType{}
+	parseArgs(cfg)
+	if err := parseEnv(cfg); err != nil {
+		return &ConfigType{}, err
 	}
 
-	flag.StringVar(&Config.Addr, "a", ":8080", "Адрес запуска сервера. HOST:PORT")
-	flag.StringVar(&Config.ShortHost, "b", "", "Подменный УРЛ для сокращенного УРЛ. HOST:PORT")
-	flag.Parse()
+	ifTrue(&hookAddr, &cfg.Addr)
+	ifTrue(&hookShortHost, &cfg.ShortHost)
 
-	//if Config.ShortHost != "" {
-	//	confShortHost(Config.ShortHost)
-	//}
-
-	parseEnv()
-}
-
-func parseEnv() {
-	//if _addr, ok := os.LookupEnv("SERVER_ADDRESS"); ok {
-	//	Config.Addr = _addr
-	//}
-	//
-	//if _shortHost, ok := os.LookupEnv("BASE_URL"); ok {
-	//	confShortHost(_shortHost)
-	//}
-
-	err := env.Parse(&Config)
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	err := validate.Struct(cfg)
 	if err != nil {
-		panic(err)
+		return &ConfigType{}, err
 	}
 
-	if Config.ShortHost != "" {
-		confShortHost(Config.ShortHost)
+	if cfg.ShortHost != "" {
+		_url, err := url.Parse(cfg.ShortHost)
+		if err != nil {
+			return &ConfigType{}, err
+		}
+		cfg.ShortHostURL = _url
 	}
+
+	return cfg, nil
 }
 
-func confShortHost(shortHost string) {
-	if shortHost == "" {
+var parsedArgs = ConfigType{}
+
+// parseArgs
+func parseArgs(cfg *ConfigType) {
+	if parsedArgs == (ConfigType{}) {
+		flag.StringVar(&parsedArgs.Addr, "a", DefaultAddr, "Адрес запуска сервера. [HOST]:PORT")
+		flag.StringVar(&parsedArgs.ShortHost, "b", DefaultShortHost, "Подменный УРЛ для сокращенного УРЛ. HOST[:PORT]")
+		flag.Parse()
+	}
+
+	ifTrue(&parsedArgs.Addr, &cfg.Addr)
+	ifTrue(&parsedArgs.ShortHost, &cfg.ShortHost)
+}
+
+var parsedEnv = ConfigType{}
+
+// parseEnv
+func parseEnv(cfg *ConfigType) error {
+	if parsedEnv == (ConfigType{}) {
+		err := env.Parse(&parsedEnv)
+		if err != nil {
+			return err
+		}
+	}
+
+	ifTrue(&parsedEnv.Addr, &cfg.Addr)
+	ifTrue(&parsedEnv.ShortHost, &cfg.ShortHost)
+
+	return nil
+}
+
+func ifTrue(from, to *string) {
+	if *from == "" {
 		return
 	}
 
-	parsedURL, err := url.Parse(shortHost)
-	if err != nil || parsedURL.Host == "" {
-		fmt.Printf("Не удалось разобрать URL для подстановки в сокращенную ссылку. Получено: %s", shortHost)
-		panic(err)
-	}
-
-	Config.ShortHost = shortHost
-	Config.ShortHostURL = parsedURL
+	*to = *from
 }

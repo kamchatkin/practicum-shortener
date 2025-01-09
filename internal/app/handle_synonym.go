@@ -47,17 +47,18 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 
-	if config.Config.ShortHost != "" {
-		//if strings.HasPrefix(config.Config.ShortHost, "http") {
-		fmt.Fprintf(w, "%s://%s/%s", config.Config.ShortHostURL.Scheme, config.Config.ShortHostURL.Host, alias)
-		//}
-
-		return
-	}
-
 	proto := "http"
 	if r.TLS != nil {
 		proto = "https"
 	}
-	_, _ = fmt.Fprintf(w, "%s://%s/%s", proto, r.Host, alias)
+
+	host := r.Host
+
+	cfg, _ := config.Config() // игнорируем ошибку потому что это ни на что не влияет
+	if cfg.ShortHost != "" {
+		proto = cfg.ShortHostURL.Scheme
+		host = cfg.ShortHostURL.Host
+	}
+
+	_, _ = fmt.Fprintf(w, "%s://%s/%s", proto, host, alias)
 }
