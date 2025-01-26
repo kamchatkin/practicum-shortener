@@ -49,6 +49,9 @@ func Router() *chi.Mux {
 	// Переадресация
 	r.Get("/{id}", withLogging(app.RedirectHandler))
 
+	// api, iter7
+	r.Post("/api/shorten", withLogging(app.HandleAPI))
+
 	return r
 }
 

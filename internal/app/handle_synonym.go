@@ -2,10 +2,8 @@ package app
 
 import (
 	"fmt"
-	"github.com/kamchatkin/practicum-shortener/config"
 	"io"
 	"net/http"
-	"net/url"
 )
 
 const maxIterate = 3
@@ -23,42 +21,23 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := url.ParseRequestURI(string(sourceURL)); err != nil {
+	err = validate.Var(string(sourceURL), "url")
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	var alias string
-	for i := range maxIterate {
-		alias = shortness()
-
-		if _, ok := db[alias]; !ok {
-			break
-		}
-
-		i++
-		if i == maxIterate {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+	var shortURL string
+	shortURL, err = makeAlias(&aliasProps{
+		SourceURL: string(sourceURL),
+		HTTPS:     r.TLS != nil,
+		Host:      r.Host,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
-
-	db[alias] = string(sourceURL)
 
 	w.WriteHeader(http.StatusCreated)
-
-	proto := "http"
-	if r.TLS != nil {
-		proto = "https"
-	}
-
-	host := r.Host
-
-	cfg, _ := config.Config() // игнорируем ошибку потому что это ни на что не влияет
-	if cfg.ShortHost != "" {
-		proto = cfg.ShortHostURL.Scheme
-		host = cfg.ShortHostURL.Host
-	}
-
-	_, _ = fmt.Fprintf(w, "%s://%s/%s", proto, host, alias)
+	_, _ = fmt.Fprintf(w, shortURL)
 }
