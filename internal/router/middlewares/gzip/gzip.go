@@ -1,7 +1,9 @@
 package gzip
 
 import (
+	//"bytes"
 	"compress/gzip"
+	//"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -31,8 +33,7 @@ func WithGzipped(next http.HandlerFunc) http.HandlerFunc {
 			defer cw.Close()
 		}
 
-		contentEncoding := r.Header.Get("Content-Encoding")
-		isReceivedGzip := strings.Contains(contentEncoding, "gzip")
+		isReceivedGzip := strings.Contains(r.Header.Get("Content-Encoding"), "gzip")
 		if isReceivedGzip {
 			cr, err := newCompressReader(r.Body)
 			if err != nil {
@@ -47,17 +48,13 @@ func WithGzipped(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-type (
-	compressWriter struct {
-		w  http.ResponseWriter
-		zw *gzip.Writer
-	}
-
-	compressReader struct {
-		r  io.ReadCloser
-		zr *gzip.Reader
-	}
-)
+// compressWriter реализует интерфейс http.ResponseWriter и позволяет прозрачно для сервера
+// сжимать передаваемые данные и выставлять правильные HTTP-заголовки
+type compressWriter struct {
+	w      http.ResponseWriter
+	zw     *gzip.Writer
+	wBytes int64
+}
 
 func newCompressWriter(w http.ResponseWriter) *compressWriter {
 	return &compressWriter{
@@ -66,27 +63,50 @@ func newCompressWriter(w http.ResponseWriter) *compressWriter {
 	}
 }
 
-func (cw *compressWriter) Header() http.Header {
-	return cw.w.Header()
+func (c *compressWriter) Header() http.Header {
+	return c.w.Header()
 }
 
-func (cw *compressWriter) Write(b []byte) (int, error) {
-	if _, ok := isCompressedContentType[cw.w.Header().Get("Content-Type")]; !ok {
-		return cw.w.Write(b)
+func (c *compressWriter) Write(p []byte) (int, error) {
+	isCompressedType := false
+	ct := c.w.Header().Get("Content-Type")
+	cts := strings.Split(ct, ";")
+	ct = strings.TrimSpace(cts[0])
+	_, isCompressedType = isCompressedContentType[ct]
+
+	if len(p) == 0 || !isCompressedType {
+		return c.w.Write(p)
 	}
 
-	return cw.zw.Write(b)
+	b, err := c.zw.Write(p)
+	c.wBytes += int64(b)
+	return b, err
 }
 
-func (cw *compressWriter) WriteHeader(statusCode int) {
+func (c *compressWriter) WriteHeader(statusCode int) {
 	if statusCode < 300 {
-		cw.w.Header().Set("Content-Encoding", "gzip")
+		c.w.Header().Set("Content-Encoding", "gzip")
 	}
-	cw.w.WriteHeader(statusCode)
+
+	c.w.WriteHeader(statusCode)
 }
 
-func (cw *compressWriter) Close() error {
-	return cw.zw.Close()
+// Close закрывает gzip.Writer и досылает все данные из буфера.
+func (c *compressWriter) Close() error {
+	if c.wBytes == 0 {
+		return nil
+	}
+
+	return c.zw.Close()
+}
+
+// -----------------
+
+// compressReader реализует интерфейс io.ReadCloser и позволяет прозрачно для сервера
+// декомпрессировать получаемые от клиента данные
+type compressReader struct {
+	r  io.ReadCloser
+	zr *gzip.Reader
 }
 
 func newCompressReader(r io.ReadCloser) (*compressReader, error) {
@@ -101,14 +121,13 @@ func newCompressReader(r io.ReadCloser) (*compressReader, error) {
 	}, nil
 }
 
-func (cr *compressReader) Read(p []byte) (int, error) {
-	return cr.zr.Read(p)
+func (c compressReader) Read(p []byte) (n int, err error) {
+	return c.zr.Read(p)
 }
 
-func (cr *compressReader) Close() error {
-	if err := cr.r.Close(); err != nil {
+func (c *compressReader) Close() error {
+	if err := c.r.Close(); err != nil {
 		return err
 	}
-
-	return cr.zr.Close()
+	return c.zr.Close()
 }
