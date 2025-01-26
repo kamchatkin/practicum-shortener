@@ -1,9 +1,7 @@
 package gzip
 
 import (
-	//"bytes"
 	"compress/gzip"
-	//"fmt"
 	"io"
 	"net/http"
 	"strings"
