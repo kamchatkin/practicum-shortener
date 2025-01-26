@@ -12,7 +12,7 @@ var respContentTypes4Gzip = []string{
 	"text/html",
 }
 
-var isCompressedContentType map[string]bool
+var isCompressedContentType = map[string]bool{}
 
 func init() {
 	for _, contentType := range respContentTypes4Gzip {
