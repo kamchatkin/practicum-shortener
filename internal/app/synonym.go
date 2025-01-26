@@ -1,6 +1,11 @@
 package app
 
-import "math/rand"
+import (
+	"errors"
+	"fmt"
+	"github.com/kamchatkin/practicum-shortener/config"
+	"math/rand"
+)
 
 var words []rune
 var wordsQuantity = 0
@@ -22,6 +27,47 @@ func init() {
 
 // LENGTH длина алиаса для сокращения
 const LENGTH = 5
+
+// aliasProps Именнованные параметры для создания алиаса
+type aliasProps struct {
+	SourceURL string
+	HTTPS     bool
+	Host      string
+}
+
+// makeAlias
+func makeAlias(props *aliasProps) (string, error) {
+	var aliasKey string
+	for i := range maxIterate {
+		aliasKey = shortness()
+
+		if _, ok := db[aliasKey]; !ok {
+			break
+		}
+
+		i++
+		if i == maxIterate {
+			return "", errors.New("исчерпано максимальное количество попыток создания алиаса")
+		}
+	}
+
+	db[aliasKey] = props.SourceURL
+
+	proto := "http"
+	if props.HTTPS {
+		proto = "https"
+	}
+
+	host := props.Host
+
+	cfg, _ := config.Config() // игнорируем ошибку потому что это ни на что не влияет
+	if cfg.ShortHost != "" {
+		proto = cfg.ShortHostURL.Scheme
+		host = cfg.ShortHostURL.Host
+	}
+
+	return fmt.Sprintf("%s://%s/%s", proto, host, aliasKey), nil
+}
 
 // shortness
 func shortness() string {
