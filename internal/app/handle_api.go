@@ -18,6 +18,7 @@ type APIRequest struct {
 func HandleAPI(w http.ResponseWriter, r *http.Request) {
 	toShort := APIRequest{}
 	err := json.NewDecoder(r.Body).Decode(&toShort)
+	defer r.Body.Close()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -39,7 +40,7 @@ func HandleAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(APIResponse{Result: shortURL})
 }

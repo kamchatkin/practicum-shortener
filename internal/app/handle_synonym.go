@@ -39,5 +39,5 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	_, _ = fmt.Fprintf(w, shortURL)
+	_, _ = fmt.Fprintln(w, shortURL)
 }
