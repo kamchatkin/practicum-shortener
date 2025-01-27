@@ -13,13 +13,13 @@ const DefaultAddr = ":8080"
 
 const DefaultShortHost = ""
 
-const DefaultDBStoragePath = "/app1"
+const DefaultDBStoragePath = "/tmp"
 
 const DefaultDBDumpFileName = "db.txt"
 
 type ConfigType struct {
 	// Addr адрес для запуска этого приложения
-	Addr string `validate:"hostname_port" env:"SERVER_ADDRESS"`
+	Addr string `env:"SERVER_ADDRESS" validate:"hostname_port"`
 
 	// ShortHost подменный хост в сокращенном УРЛ
 	ShortHost string `env:"BASE_URL" validate:"omitempty,http_url"`
