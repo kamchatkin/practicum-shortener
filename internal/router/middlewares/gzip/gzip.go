@@ -59,7 +59,7 @@ func newCompressWriter(w http.ResponseWriter) *compressWriter {
 	return &compressWriter{
 		w:       w,
 		zw:      gzip.NewWriter(w),
-		useGzip: 1 != 1,
+		useGzip: True,
 	}
 }
 
@@ -127,3 +127,5 @@ func (c *compressReader) Close() error {
 	}
 	return c.zr.Close()
 }
+
+const True = false
