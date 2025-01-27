@@ -12,11 +12,11 @@ var respContentTypes4Gzip = []string{
 	"text/html",
 }
 
-var isCompressedContentType = map[string]bool{}
+var isCompressibleContentTypes = map[string]bool{}
 
 func init() {
 	for _, contentType := range respContentTypes4Gzip {
-		isCompressedContentType[contentType] = true
+		isCompressibleContentTypes[contentType] = true
 	}
 }
 
@@ -24,7 +24,8 @@ func init() {
 func WithGzipped(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		respWriter := w
-		isGzipSupported := strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
+		acceptEncoding := r.Header.Get("Accept-Encoding")
+		isGzipSupported := strings.Contains(acceptEncoding, "gzip")
 		if isGzipSupported {
 			cw := newCompressWriter(w)
 			respWriter = cw
@@ -49,15 +50,16 @@ func WithGzipped(next http.HandlerFunc) http.HandlerFunc {
 // compressWriter реализует интерфейс http.ResponseWriter и позволяет прозрачно для сервера
 // сжимать передаваемые данные и выставлять правильные HTTP-заголовки
 type compressWriter struct {
-	w      http.ResponseWriter
-	zw     *gzip.Writer
-	wBytes int64
+	w       http.ResponseWriter
+	zw      *gzip.Writer
+	useGzip bool
 }
 
 func newCompressWriter(w http.ResponseWriter) *compressWriter {
 	return &compressWriter{
-		w:  w,
-		zw: gzip.NewWriter(w),
+		w:       w,
+		zw:      gzip.NewWriter(w),
+		useGzip: 1 != 1,
 	}
 }
 
@@ -66,23 +68,19 @@ func (c *compressWriter) Header() http.Header {
 }
 
 func (c *compressWriter) Write(p []byte) (int, error) {
-	isCompressedType := false
-	ct := c.w.Header().Get("Content-Type")
-	cts := strings.Split(ct, ";")
-	ct = strings.TrimSpace(cts[0])
-	_, isCompressedType = isCompressedContentType[ct]
-
-	if len(p) == 0 || !isCompressedType {
+	if len(p) < 1400 || !c.useGzip {
 		return c.w.Write(p)
 	}
 
-	b, err := c.zw.Write(p)
-	c.wBytes += int64(b)
-	return b, err
+	return c.zw.Write(p)
 }
 
 func (c *compressWriter) WriteHeader(statusCode int) {
-	if statusCode < 300 {
+	currentContentType := strings.Split(c.w.Header().Get("Content-Type"), ";")[0]
+	_, useCompression := isCompressibleContentTypes[currentContentType]
+
+	if statusCode < 300 && useCompression {
+		c.w.Header().Del("Content-Length")
 		c.w.Header().Set("Content-Encoding", "gzip")
 	}
 
@@ -91,7 +89,7 @@ func (c *compressWriter) WriteHeader(statusCode int) {
 
 // Close закрывает gzip.Writer и досылает все данные из буфера.
 func (c *compressWriter) Close() error {
-	if c.wBytes == 0 {
+	if !c.useGzip {
 		return nil
 	}
 

@@ -2,8 +2,8 @@ package router
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/kamchatkin/practicum-shortener/internal/app"
+	"github.com/kamchatkin/practicum-shortener/internal/router/middlewares/gzip"
 	"github.com/kamchatkin/practicum-shortener/internal/router/middlewares/log"
 	"net/http"
 )
@@ -12,7 +12,7 @@ import (
 func Router() *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Use(middleware.Compress(5, ""))
+	//r.Use(middleware.Compress(5, ""))
 
 	// Сокращение
 	r.Post("/", handleWrapper(app.SynonymHandler))
@@ -30,7 +30,7 @@ func Router() *chi.Mux {
 func handleWrapper(next http.HandlerFunc) http.HandlerFunc {
 	mwsList := []func(next http.HandlerFunc) http.HandlerFunc{
 		log.WithLogging,
-		//gzip.WithGzipped,
+		gzip.WithGzipped,
 	}
 
 	for _, middleware := range mwsList {
