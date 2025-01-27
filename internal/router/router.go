@@ -3,78 +3,39 @@ package router
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/kamchatkin/practicum-shortener/internal/app"
-	"go.uber.org/zap"
+	"github.com/kamchatkin/practicum-shortener/internal/router/middlewares/gzip"
+	"github.com/kamchatkin/practicum-shortener/internal/router/middlewares/log"
 	"net/http"
-	"time"
 )
-
-var routeLogger *zap.Logger
-
-func init() {
-	routeLogger, _ = zap.NewDevelopment()
-	defer routeLogger.Sync()
-}
-
-type (
-	responseData struct {
-		status int
-		size   int
-	}
-
-	loggingResponseWriter struct {
-		http.ResponseWriter
-		responseData *responseData
-	}
-)
-
-func (r *loggingResponseWriter) Write(data []byte) (int, error) {
-	size, err := r.ResponseWriter.Write(data)
-	r.responseData.size += size
-
-	return size, err
-}
-
-func (r *loggingResponseWriter) WriteHeader(statusCode int) {
-	r.ResponseWriter.WriteHeader(statusCode)
-	r.responseData.status = statusCode
-}
 
 // Router Маршруты приложения
 func Router() *chi.Mux {
 	r := chi.NewRouter()
 
+	//r.Use(middleware.Compress(5, ""))
+
 	// Сокращение
-	r.Post("/", withLogging(app.SynonymHandler))
+	r.Post("/", handleWrapper(app.SynonymHandler))
 
 	// Переадресация
-	r.Get("/{id}", withLogging(app.RedirectHandler))
+	r.Get("/{id}", handleWrapper(app.RedirectHandler))
 
 	// api, iter7
-	r.Post("/api/shorten", withLogging(app.HandleAPI))
+	r.Post("/api/shorten", handleWrapper(app.HandleAPI))
 
 	return r
 }
 
-// withLogging Middleware. Логирование запросов
-func withLogging(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		uri := r.RequestURI
-		method := r.Method
-
-		respData := &responseData{}
-		lrw := loggingResponseWriter{ResponseWriter: w, responseData: respData}
-
-		next.ServeHTTP(&lrw, r)
-
-		duration := time.Since(start)
-
-		routeLogger.Info(uri,
-			zap.String("method", method),
-			zap.String("uri", uri),
-			zap.Int("status", respData.status),
-			zap.Int("size", lrw.responseData.size),
-			zap.Duration("duration", duration),
-		)
+// handleWrapper обертка хэндлеров в мидлвари
+func handleWrapper(next http.HandlerFunc) http.HandlerFunc {
+	mwsList := []func(next http.HandlerFunc) http.HandlerFunc{
+		log.WithLogging,
+		gzip.WithGzipped,
 	}
+
+	for _, middleware := range mwsList {
+		next = middleware(next)
+	}
+
+	return next
 }
