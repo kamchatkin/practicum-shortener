@@ -68,7 +68,7 @@ func (c *compressWriter) Header() http.Header {
 }
 
 func (c *compressWriter) Write(p []byte) (int, error) {
-	if len(p) < 1400 || !c.useGzip {
+	if !c.useGzip {
 		return c.w.Write(p)
 	}
 
@@ -76,10 +76,13 @@ func (c *compressWriter) Write(p []byte) (int, error) {
 }
 
 func (c *compressWriter) WriteHeader(statusCode int) {
+	//
+	// Фактическое решение об использовании сжатия принимается тут-с
+	//
 	currentContentType := strings.Split(c.w.Header().Get("Content-Type"), ";")[0]
-	_, useCompression := isCompressibleContentTypes[currentContentType]
+	_, c.useGzip = isCompressibleContentTypes[currentContentType]
 
-	if statusCode < 300 && useCompression {
+	if c.useGzip && statusCode < 300 {
 		c.w.Header().Del("Content-Length")
 		c.w.Header().Set("Content-Encoding", "gzip")
 	}
@@ -125,6 +128,7 @@ func (c *compressReader) Close() error {
 	if err := c.r.Close(); err != nil {
 		return err
 	}
+
 	return c.zr.Close()
 }
 
