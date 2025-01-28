@@ -24,12 +24,12 @@ func SaveDB() {
 		panic(err)
 	}
 
-	err = os.WriteFile(cfg.DumpPath(), []byte{}, 0666)
+	err = os.WriteFile(cfg.DBFilePath, []byte{}, 0666)
 	if err != nil {
 		panic(err)
 	}
 
-	file, err := os.OpenFile(cfg.DumpPath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	file, err := os.OpenFile(cfg.DBFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
 	}
@@ -54,7 +54,7 @@ func LoadDB() {
 		panic(err)
 	}
 
-	file, err := os.Open(cfg.DumpPath())
+	file, err := os.Open(cfg.DBFilePath)
 	if err != nil {
 		return
 	}

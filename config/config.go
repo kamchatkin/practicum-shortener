@@ -2,41 +2,31 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"github.com/caarlos0/env/v11"
 	"github.com/go-playground/validator/v10"
 	"net/url"
-	"os"
-	"strings"
 )
 
 const DefaultAddr = ":8080"
 
 const DefaultShortHost = ""
 
-const DefaultDBStoragePath = "/tmp"
-
-const DefaultDBDumpFileName = "db.txt"
+const DefaultDBFilePath = "/tmp/1.db"
 
 type ConfigType struct {
 	// Addr адрес для запуска этого приложения
 	Addr string `env:"SERVER_ADDRESS" validate:"hostname_port"`
 
 	// ShortHost подменный хост в сокращенном УРЛ
-	ShortHost string `env:"BASE_URL" validate:"omitempty,http_url"`
-
-	// DBStoragePath Путь хранения дампа БД
-	DBStoragePath string `env:"FILE_STORAGE_PATH" validate:"dir"`
-
+	ShortHost    string `env:"BASE_URL" validate:"omitempty,http_url"`
 	ShortHostURL *url.URL
+
+	// DBFilePath Путь хранения дампа БД
+	DBFilePath string `env:"FILE_STORAGE_PATH"`
 
 	// Возможность принудительного изменения полей. Исходно для тестов
 	forceAddr      string
 	forceShortHost string
-}
-
-func (cfg *ConfigType) DumpPath() string {
-	return fmt.Sprintf("/%s/%s", strings.Trim(cfg.DBStoragePath, "/"), DefaultDBDumpFileName)
 }
 
 var hookAddr = ""
@@ -62,14 +52,6 @@ func Config() (*ConfigType, error) {
 	ifTrue(&hookAddr, &cfg.Addr)
 	ifTrue(&hookShortHost, &cfg.ShortHost)
 
-	storage := fmt.Sprintf("/%s", strings.Trim(cfg.DBStoragePath, "/"))
-	if _, err := os.Lstat(storage); err != nil && os.IsNotExist(err) {
-		err = os.MkdirAll(storage, os.ModeDir)
-		if err != nil {
-			return &ConfigType{}, err
-		}
-	}
-
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	err := validate.Struct(cfg)
 	if err != nil {
@@ -94,13 +76,13 @@ func parseArgs(cfg *ConfigType) {
 	if parsedArgs == (ConfigType{}) {
 		flag.StringVar(&parsedArgs.Addr, "a", DefaultAddr, "Адрес запуска сервера. [HOST]:PORT")
 		flag.StringVar(&parsedArgs.ShortHost, "b", DefaultShortHost, "Подменный УРЛ для сокращенного УРЛ. HOST[:PORT]")
-		flag.StringVar(&parsedArgs.DBStoragePath, "f", DefaultDBStoragePath, "Путь до сохранения дампа БД")
+		flag.StringVar(&parsedArgs.DBFilePath, "f", DefaultDBFilePath, "Путь до сохранения дампа БД")
 		flag.Parse()
 	}
 
 	ifTrue(&parsedArgs.Addr, &cfg.Addr)
 	ifTrue(&parsedArgs.ShortHost, &cfg.ShortHost)
-	ifTrue(&parsedArgs.DBStoragePath, &cfg.DBStoragePath)
+	ifTrue(&parsedArgs.DBFilePath, &cfg.DBFilePath)
 }
 
 var parsedEnv = ConfigType{}
@@ -116,7 +98,7 @@ func parseEnv(cfg *ConfigType) error {
 
 	ifTrue(&parsedEnv.Addr, &cfg.Addr)
 	ifTrue(&parsedEnv.ShortHost, &cfg.ShortHost)
-	ifTrue(&parsedEnv.DBStoragePath, &cfg.DBStoragePath)
+	ifTrue(&parsedEnv.DBFilePath, &cfg.DBFilePath)
 
 	return nil
 }

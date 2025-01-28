@@ -61,7 +61,7 @@ func TestIfTrue(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
-	cc := ConfigType{Addr: ":8080", DBStoragePath: "/tmp"}
+	cc := ConfigType{Addr: ":8080", DBFilePath: "/tmp"}
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	err := validate.Struct(cc)
 
