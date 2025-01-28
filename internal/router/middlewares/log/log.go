@@ -10,7 +10,7 @@ var routeLogger *zap.Logger
 
 func init() {
 	routeLogger, _ = zap.NewDevelopment()
-	defer routeLogger.Sync() // это не к месту же
+	defer routeLogger.Sync()
 }
 
 // WithLogging Middleware. Логирование запросов

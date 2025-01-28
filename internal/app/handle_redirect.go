@@ -5,6 +5,10 @@ import (
 	"net/http"
 )
 
+var db = map[string]string{
+	"qwerty": "http://localhost:8080/?qwerty",
+}
+
 // RedirectHandler Поиск сокращения и переадресация
 func RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	alias := chi.URLParam(r, "id")

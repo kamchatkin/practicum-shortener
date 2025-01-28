@@ -11,18 +11,14 @@ const DefaultAddr = ":8080"
 
 const DefaultShortHost = ""
 
-const DefaultDBFilePath = "/tmp/1.db"
-
 type ConfigType struct {
 	// Addr адрес для запуска этого приложения
-	Addr string `env:"SERVER_ADDRESS" validate:"hostname_port"`
+	Addr string `validate:"hostname_port" env:"SERVER_ADDRESS"`
 
 	// ShortHost подменный хост в сокращенном УРЛ
-	ShortHost    string `env:"BASE_URL" validate:"omitempty,http_url"`
-	ShortHostURL *url.URL
+	ShortHost string `env:"BASE_URL" validate:"omitempty,http_url"`
 
-	// DBFilePath Путь хранения дампа БД
-	DBFilePath string `env:"FILE_STORAGE_PATH"`
+	ShortHostURL *url.URL
 
 	// Возможность принудительного изменения полей. Исходно для тестов
 	forceAddr      string
@@ -76,13 +72,11 @@ func parseArgs(cfg *ConfigType) {
 	if parsedArgs == (ConfigType{}) {
 		flag.StringVar(&parsedArgs.Addr, "a", DefaultAddr, "Адрес запуска сервера. [HOST]:PORT")
 		flag.StringVar(&parsedArgs.ShortHost, "b", DefaultShortHost, "Подменный УРЛ для сокращенного УРЛ. HOST[:PORT]")
-		flag.StringVar(&parsedArgs.DBFilePath, "f", DefaultDBFilePath, "Путь до сохранения дампа БД")
 		flag.Parse()
 	}
 
 	ifTrue(&parsedArgs.Addr, &cfg.Addr)
 	ifTrue(&parsedArgs.ShortHost, &cfg.ShortHost)
-	ifTrue(&parsedArgs.DBFilePath, &cfg.DBFilePath)
 }
 
 var parsedEnv = ConfigType{}
@@ -98,7 +92,6 @@ func parseEnv(cfg *ConfigType) error {
 
 	ifTrue(&parsedEnv.Addr, &cfg.Addr)
 	ifTrue(&parsedEnv.ShortHost, &cfg.ShortHost)
-	ifTrue(&parsedEnv.DBFilePath, &cfg.DBFilePath)
 
 	return nil
 }
