@@ -6,6 +6,7 @@ import (
 	"github.com/caarlos0/env/v11"
 	"github.com/go-playground/validator/v10"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -25,7 +26,7 @@ type ConfigType struct {
 	ShortHost string `env:"BASE_URL" validate:"omitempty,http_url"`
 
 	// DBStoragePath Путь хранения дампа БД
-	DBStoragePath string `env:"FILE_STORAGE_PATH" validate:"dirpath"`
+	DBStoragePath string `env:"FILE_STORAGE_PATH" validate:"dir"`
 
 	ShortHostURL *url.URL
 
@@ -60,6 +61,14 @@ func Config() (*ConfigType, error) {
 
 	ifTrue(&hookAddr, &cfg.Addr)
 	ifTrue(&hookShortHost, &cfg.ShortHost)
+
+	storage := fmt.Sprintf("/%s", strings.Trim(cfg.DBStoragePath, "/"))
+	if _, err := os.Lstat(storage); err != nil && os.IsNotExist(err) {
+		err = os.MkdirAll(storage, os.ModeDir)
+		if err != nil {
+			return &ConfigType{}, err
+		}
+	}
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	err := validate.Struct(cfg)
