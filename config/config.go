@@ -13,6 +13,7 @@ const DefaultShortHost = ""
 
 const DefaultDBFilePath = "/tmp/1.db"
 
+// ConfigType структура конфига
 type ConfigType struct {
 	// Addr адрес для запуска этого приложения
 	Addr string `env:"SERVER_ADDRESS" validate:"hostname_port"`
