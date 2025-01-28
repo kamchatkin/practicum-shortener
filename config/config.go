@@ -25,7 +25,7 @@ type ConfigType struct {
 	ShortHost string `env:"BASE_URL" validate:"omitempty,http_url"`
 
 	// DBStoragePath Путь хранения дампа БД
-	DBStoragePath string `env:"FILE_STORAGE_PATH" validate:"dir"`
+	DBStoragePath string `env:"FILE_STORAGE_PATH" validate:"dirpath"`
 
 	ShortHostURL *url.URL
 
