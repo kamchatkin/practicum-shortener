@@ -8,10 +8,9 @@ import (
 )
 
 const DefaultAddr = ":8080"
-
 const DefaultShortHost = ""
-
 const DefaultDBFilePath = "/tmp/1.db"
+const DefaultDatabaseDsn = ""
 
 // ConfigType структура конфига
 type ConfigType struct {
@@ -28,6 +27,9 @@ type ConfigType struct {
 	// Возможность принудительного изменения полей. Исходно для тестов
 	forceAddr      string
 	forceShortHost string
+
+	// DatabaseDsn строка параметров соединения с БД
+	DatabaseDsn string `env:"DATABASE_DSN"`
 }
 
 var hookAddr = ""
@@ -78,12 +80,14 @@ func parseArgs(cfg *ConfigType) {
 		flag.StringVar(&parsedArgs.Addr, "a", DefaultAddr, "Адрес запуска сервера. [HOST]:PORT")
 		flag.StringVar(&parsedArgs.ShortHost, "b", DefaultShortHost, "Подменный УРЛ для сокращенного УРЛ. HOST[:PORT]")
 		flag.StringVar(&parsedArgs.DBFilePath, "f", DefaultDBFilePath, "Путь до сохранения дампа БД")
+		flag.StringVar(&parsedArgs.DatabaseDsn, "d", DefaultDatabaseDsn, "Строка параметров соединения с БД")
 		flag.Parse()
 	}
 
 	ifTrue(&parsedArgs.Addr, &cfg.Addr)
 	ifTrue(&parsedArgs.ShortHost, &cfg.ShortHost)
 	ifTrue(&parsedArgs.DBFilePath, &cfg.DBFilePath)
+	ifTrue(&parsedArgs.DatabaseDsn, &cfg.DatabaseDsn)
 }
 
 var parsedEnv = ConfigType{}
@@ -100,6 +104,7 @@ func parseEnv(cfg *ConfigType) error {
 	ifTrue(&parsedEnv.Addr, &cfg.Addr)
 	ifTrue(&parsedEnv.ShortHost, &cfg.ShortHost)
 	ifTrue(&parsedEnv.DBFilePath, &cfg.DBFilePath)
+	ifTrue(&parsedEnv.DatabaseDsn, &cfg.DatabaseDsn)
 
 	return nil
 }
