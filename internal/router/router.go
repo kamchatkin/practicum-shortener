@@ -12,8 +12,6 @@ import (
 func Router() *chi.Mux {
 	r := chi.NewRouter()
 
-	//r.Use(middleware.Compress(5, ""))
-
 	// Сокращение
 	r.Post("/", handleWrapper(app.SynonymHandler))
 
@@ -22,6 +20,8 @@ func Router() *chi.Mux {
 
 	// api, iter7
 	r.Post("/api/shorten", handleWrapper(app.HandleAPI))
+
+	r.Get("/ping", handleWrapper(app.HandlePing))
 
 	return r
 }
