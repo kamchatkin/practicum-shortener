@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
-	_ "github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/router"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"go.uber.org/zap"
