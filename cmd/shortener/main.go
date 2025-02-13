@@ -47,7 +47,7 @@ func main() {
 		if err1 != nil {
 			logger.Error(err1.Error())
 		}
-		
+
 		os.Exit(1)
 	}
 
