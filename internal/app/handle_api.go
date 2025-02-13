@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"net/http"
 	"time"
 )
@@ -19,15 +20,18 @@ type APIRequest struct {
 // HandleAPI Сокращение ссылки по api
 func HandleAPI(w http.ResponseWriter, r *http.Request) {
 	toShort := APIRequest{}
+	logger := logs.NewLogger()
 	err := json.NewDecoder(r.Body).Decode(&toShort)
 	defer r.Body.Close()
 	if err != nil {
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	err = validate.Struct(&toShort)
 	if err != nil {
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -41,6 +45,7 @@ func HandleAPI(w http.ResponseWriter, r *http.Request) {
 		Host:      r.Host,
 	})
 	if err != nil {
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
