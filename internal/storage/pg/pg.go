@@ -64,3 +64,37 @@ func (p *PostgresStorage) Close() error {
 func (p *PostgresStorage) Ping(ctx context.Context) error {
 	return db.Ping(ctx)
 }
+
+func PrepareDB() error {
+
+	pgs := PostgresStorage{}
+	pgs.Open()
+	defer pgs.Close()
+
+	var count int64
+	err := db.QueryRow(context.Background(), "SELECT count(*) FROM pg_catalog.pg_tables where tablename = $1", "aliases").Scan(&count)
+	if err != nil {
+		return fmt.Errorf("could not get tables: %w", err)
+	}
+
+	if count == 0 {
+		_, err := db.Exec(context.Background(), `
+create table if not exists aliases
+(
+    alias      varchar(10) primary key,
+    source     text not null,
+    quantity   bigint    default 0,
+    created_at timestamp default now()
+);
+
+comment on table aliases is 'long to short and vice versa';
+
+comment on column aliases.quantity is 'redirects';
+`)
+		if err != nil {
+			return fmt.Errorf("could not create table: %w", err)
+		}
+	}
+
+	return nil
+}

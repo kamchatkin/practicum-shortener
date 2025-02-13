@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/models"
@@ -37,28 +38,35 @@ type Storage interface {
 	Ping(ctx context.Context) error
 }
 
-func InitStorage() {
+func InitStorage() error {
 	cfg, _ := config.Config()
 
 	logger := logs.NewLogger()
 
 	if DB != nil {
 		logger.Info("Storage already initialized")
-		return
+		return nil
 	}
 
 	if cfg.DatabaseDsn != "" {
 		logger.Info("Выбрана БД: postgresql")
 		DB = &(pgStorage.PostgresStorage{})
-		return
+
+		err := pgStorage.PrepareDB()
+		if err != nil {
+			return fmt.Errorf("не удалось подготовить БД: %w", err)
+		}
+		return nil
 	}
 
 	if cfg.DBFilePath != "" {
 		logger.Info("Выбрана БД: файловое хранилище")
 		DB = &(fileStorage.FileStorage{})
-		return
+		return nil
 	}
 
 	logger.Info("Выбрана БД: в памяти приложения (до перезагрузки)")
 	DB = &(memoryStorage.MemStorage{})
+
+	return nil
 }

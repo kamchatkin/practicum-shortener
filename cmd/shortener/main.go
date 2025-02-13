@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/router"
@@ -41,7 +42,11 @@ func main() {
 	// @todo по хорошему рефакторинг, отдельный метод подготовки настроек и потом только получать объект
 
 	// Подготовка хранилища
-	storage.InitStorage()
+	err = storage.InitStorage()
+	if err != nil {
+		logger.Error(fmt.Errorf("ошибка инициализации БД: %w", err).Error())
+	}
+
 	if ok, err1 := storage.DB.Open(); !ok {
 		if err1 != nil {
 			logger.Error(err1.Error())
