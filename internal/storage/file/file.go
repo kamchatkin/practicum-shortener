@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/models"
 	"os"
@@ -34,7 +33,7 @@ func (f *FileStorage) Set(_ context.Context, key, value string) error {
 func (f *FileStorage) Get(_ context.Context, key string) (models.Alias, error) {
 	value, ok := memoryDB.Load(key)
 	if !ok {
-		return models.Alias{}, errors.New("not found")
+		return models.Alias{}, nil
 	}
 
 	return f.asAlias(key, value.(string)), nil

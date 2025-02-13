@@ -9,7 +9,9 @@ import (
 
 const DefaultAddr = ":8080"
 const DefaultShortHost = ""
-const DefaultDBFilePath = "/tmp/1.db"
+
+// const DefaultDBFilePath = "/tmp/1.db"
+const DefaultDBFilePath = ""
 const DefaultDatabaseDsn = ""
 
 // ConfigType структура конфига

@@ -2,7 +2,6 @@ package memory
 
 import (
 	"context"
-	"errors"
 	"github.com/kamchatkin/practicum-shortener/internal/models"
 	"sync"
 	"time"
@@ -20,11 +19,10 @@ func (m *MemStorage) Set(_ context.Context, key, value string) error {
 	return nil
 }
 
-// Get
 func (m *MemStorage) Get(_ context.Context, key string) (models.Alias, error) {
 	value, ok := memoryDB.Load(key)
 	if !ok {
-		return models.Alias{}, errors.New("key not found")
+		return models.Alias{}, nil
 	}
 
 	return m.asAlias(key, value.(string)), nil
