@@ -1,8 +1,10 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 )
 
 // APIResponse Структура ответа
@@ -30,7 +32,10 @@ func HandleAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL, err := makeAlias(&aliasProps{
+	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+	defer cancel()
+
+	shortURL, err := makeAlias(ctx, &aliasProps{
 		SourceURL: toShort.URL,
 		HTTPS:     r.TLS != nil,
 		Host:      r.Host,

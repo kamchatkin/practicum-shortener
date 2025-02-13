@@ -1,20 +1,15 @@
 package log
 
 import (
+	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
 
-var routeLogger *zap.Logger
-
-func init() {
-	routeLogger, _ = zap.NewDevelopment()
-	defer routeLogger.Sync() // это не к месту же
-}
-
 // WithLogging Middleware. Логирование запросов
 func WithLogging(next http.HandlerFunc) http.HandlerFunc {
+	logger := logs.NewLogger()
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		uri := r.RequestURI
@@ -27,7 +22,7 @@ func WithLogging(next http.HandlerFunc) http.HandlerFunc {
 
 		duration := time.Since(start)
 
-		routeLogger.Info(uri,
+		logger.Info(uri,
 			zap.String("method", method),
 			zap.String("uri", uri),
 			zap.Int("status", respData.status),

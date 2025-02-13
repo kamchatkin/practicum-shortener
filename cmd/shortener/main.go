@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"github.com/kamchatkin/practicum-shortener/config"
-	"github.com/kamchatkin/practicum-shortener/internal/app"
+	"github.com/kamchatkin/practicum-shortener/internal/logs"
+	_ "github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/router"
+	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
@@ -12,13 +13,9 @@ import (
 	"syscall"
 )
 
-var logger *zap.Logger
-
-func init() {
-	logger, _ = zap.NewDevelopment()
-}
-
 func main() {
+	logger := logs.NewLogger()
+
 	ch := make(chan os.Signal, 3)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
@@ -28,23 +25,33 @@ func main() {
 
 		// this is a good place to flush everything to disk
 		// before terminating.
-		app.SaveDB()
 		logger.Info("Signal type : ", zap.String("signal", signalType.String()))
 		logger.Sync()
-
+		storage.DB.Close()
 		os.Exit(0)
 	}()
 
+	// Конфигурация
 	cfg, err := config.Config()
 	if err != nil {
-		fmt.Printf("Ошибка подготовки конфигурации приложения. Надо ли в этом случае давать запускать приложение?\n%s", err)
-		panic(err)
+		logger.Error("Ошибка подготовки конфигурации приложения. Надо ли в этом случае давать запускать приложение?\n",
+			zap.Error(err))
+		os.Exit(1)
+	}
+	// Далее ошибку при получении конфигурации можно игнорировать
+	// @todo по хорошему рефакторинг, отдельный метод подготовки настроек и потом только получать объект
+
+	// Подготовка хранилища
+	storage.InitStorage()
+	if ok, err1 := storage.DB.Open(); !ok {
+		if err1 != nil {
+			logger.Error(err1.Error())
+		}
+		
+		os.Exit(1)
 	}
 
-	app.LoadDB()
-	defer app.SaveDB()
 	if err := http.ListenAndServe(cfg.Addr, router.Router()); err != nil {
 		panic(err)
 	}
-
 }

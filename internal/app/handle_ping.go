@@ -2,29 +2,27 @@ package app
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/kamchatkin/practicum-shortener/config"
+	"github.com/kamchatkin/practicum-shortener/internal/storage"
+	"github.com/kamchatkin/practicum-shortener/internal/storage/pg"
 	"net/http"
+	"time"
 )
 
 func HandlePing(w http.ResponseWriter, r *http.Request) {
-	cfg, err := config.Config()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	switch storage.DB.(type) {
+	case *pg.PostgresStorage:
 
-	dbpool, err := pgxpool.New(context.Background(), cfg.DatabaseDsn)
-	if err != nil {
+		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+		defer cancel()
+
+		if err := storage.DB.Ping(ctx); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+
+	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	defer dbpool.Close()
-
-	var one int
-	err = dbpool.QueryRow(context.Background(), "select 1").Scan(&one)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	w.WriteHeader(http.StatusOK)
 }

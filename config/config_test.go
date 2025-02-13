@@ -23,7 +23,7 @@ var invalidF = "/tmp/.a"
 
 var validD = "postgres://username:password@localhost:5432/database_name1"
 var validD2 = "postgres://username:password@localhost:5432/database_name2"
-var invalidD = "postgresusernamepasswordlocalhost5432database_name" // postgres://username:password@localhost:5432/database_name
+var invalidD = "postgresusernamepasswordlocalhost5432database_name"
 
 // TestParseArgs Тест аргументов
 func TestParseArgs(t *testing.T) {

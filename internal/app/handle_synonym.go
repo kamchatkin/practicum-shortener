@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"io"
 	"net/http"
 )
@@ -15,25 +16,30 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	logger := logs.NewLogger()
+
 	sourceURL, err := io.ReadAll(r.Body)
 	if err != nil {
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	err = validate.Var(string(sourceURL), "url")
 	if err != nil {
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	var shortURL string
-	shortURL, err = makeAlias(&aliasProps{
+	shortURL, err = makeAlias(r.Context(), &aliasProps{
 		SourceURL: string(sourceURL),
 		HTTPS:     r.TLS != nil,
 		Host:      r.Host,
 	})
 	if err != nil {
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

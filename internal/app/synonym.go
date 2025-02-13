@@ -1,9 +1,12 @@
 package app
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"github.com/kamchatkin/practicum-shortener/config"
+	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"math/rand"
 )
 
@@ -28,7 +31,7 @@ func init() {
 // LENGTH длина алиаса для сокращения
 const LENGTH = 5
 
-// aliasProps Именнованные параметры для создания алиаса
+// aliasProps Именованные параметры для создания алиаса
 type aliasProps struct {
 	SourceURL string
 	HTTPS     bool
@@ -36,12 +39,18 @@ type aliasProps struct {
 }
 
 // makeAlias
-func makeAlias(props *aliasProps) (string, error) {
+func makeAlias(ctx context.Context, props *aliasProps) (string, error) {
 	var aliasKey string
 	for i := range maxIterate {
 		aliasKey = shortness()
 
-		if _, ok := db[aliasKey]; !ok {
+		alias, err := storage.DB.Get(ctx, aliasKey)
+		//  проблема взаимодействия с БД
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return "", fmt.Errorf("failed to get alias for %s: %w", aliasKey, err)
+		}
+
+		if alias.NotFound() {
 			break
 		}
 
@@ -51,7 +60,10 @@ func makeAlias(props *aliasProps) (string, error) {
 		}
 	}
 
-	db[aliasKey] = props.SourceURL
+	err := storage.DB.Set(ctx, aliasKey, props.SourceURL)
+	if err != nil {
+		return "", errors.Join(errors.New("не удалось записать в бд"), err)
+	}
 
 	proto := "http"
 	if props.HTTPS {
