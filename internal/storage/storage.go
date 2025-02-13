@@ -53,7 +53,7 @@ func InitStorage() {
 		return
 	}
 
-	if cfg.DBFilePath != "" && cfg.DBFilePath != config.DefaultDBFilePath {
+	if cfg.DBFilePath != "" {
 		logger.Info("Выбрана БД: файловое хранилище")
 		DB = &(fileStorage.FileStorage{})
 		return

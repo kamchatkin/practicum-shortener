@@ -9,6 +9,10 @@ import (
 
 var memoryDB sync.Map
 
+func init() {
+	memoryDB.Store("qwerty", "https://ya.ru/")
+}
+
 type MemStorage struct {
 	isOpened bool
 }

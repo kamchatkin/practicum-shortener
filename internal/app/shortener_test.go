@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/kamchatkin/practicum-shortener/config"
+	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -16,6 +17,8 @@ import (
 var baseURL = "http://localhost/?test"
 
 func TestShortener(t *testing.T) {
+
+	storage.InitStorage()
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(baseURL))
