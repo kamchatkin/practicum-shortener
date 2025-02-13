@@ -1,7 +1,9 @@
 services:
   go122:
     container_name: goadv
-    image: golang:1.22-bookworm
+    build:
+      dockerfile: Dockerfile
+      context: .
     ports:
       - "3000:3000"
     volumes:
@@ -10,8 +12,6 @@ services:
       - .env
     depends_on:
       - postgresql
-    command: tail -f /dev/null
-    working_dir: /app
 
   postgresql:
     container_name: goadv-db
