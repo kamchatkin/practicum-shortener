@@ -40,6 +40,7 @@ func HandleAPI(w http.ResponseWriter, r *http.Request) {
 	db, err := storage.NewStorage()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
