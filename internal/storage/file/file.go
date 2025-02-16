@@ -4,21 +4,41 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/kamchatkin/practicum-shortener/config"
+	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/models"
 	"os"
 	"sync"
 	"time"
 )
 
-var memoryDB sync.Map
+var memoryDB = &sync.Map{}
+var fStorage *FileStorage
 
 func init() {
+
 	memoryDB.Store("qwerty", "https://ya.ru/")
 }
 
-type FileStorage struct {
-	isOpened bool
+type FileStorage struct{}
+
+func NewFileStorage() (*FileStorage, error) {
+	if fStorage != nil {
+		return fStorage, nil
+	}
+
+	fs := &FileStorage{}
+	logger := logs.NewLogger()
+	err := fs.Open()
+	if err != nil {
+		err = fmt.Errorf("could not open file storage: %w", err)
+		logger.Error(err.Error())
+
+		return nil, err
+	}
+
+	return fs, nil
 }
 
 type dbRecord struct {
@@ -29,6 +49,14 @@ type dbRecord struct {
 // Set
 func (f *FileStorage) Set(_ context.Context, key, value string) error {
 	memoryDB.Store(key, value)
+
+	return nil
+}
+
+func (f *FileStorage) SetBatch(_ context.Context, item map[string]string) error {
+	for key, value := range item {
+		memoryDB.Store(key, value)
+	}
 
 	return nil
 }
@@ -44,15 +72,13 @@ func (f *FileStorage) Get(_ context.Context, key string) (models.Alias, error) {
 }
 func (f *FileStorage) Incr() {}
 
-// Open
-func (f *FileStorage) Open() (bool, error) {
-	f.isOpened = true
+// Open чтение с диска
+func (f *FileStorage) Open() error {
 	cfg, _ := config.Config()
 
 	file, err := os.OpenFile(cfg.DBFilePath, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
-		f.isOpened = false
-		return false, err
+		return err
 	}
 	defer file.Close()
 
@@ -63,14 +89,10 @@ func (f *FileStorage) Open() (bool, error) {
 		memoryDB.Store(rec.Alias, rec.Source)
 	}
 
-	return f.isOpened, nil
+	return nil
 }
 
-func (f *FileStorage) Opened() bool {
-	return f.isOpened
-}
-
-// Close
+// Close Сохранение на диск
 func (f *FileStorage) Close() error {
 	cfg, err := config.Config()
 	if err != nil {
@@ -100,8 +122,6 @@ func (f *FileStorage) Close() error {
 
 		return true
 	})
-
-	f.isOpened = false
 
 	return nil
 }

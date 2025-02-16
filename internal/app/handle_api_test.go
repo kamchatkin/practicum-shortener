@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -39,8 +38,6 @@ func TestHandleAPI(t *testing.T) {
 			expectedCode: http.StatusBadRequest,
 		},
 	}
-
-	storage.InitStorage()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

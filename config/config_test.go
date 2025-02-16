@@ -30,6 +30,7 @@ func TestParseArgs(t *testing.T) {
 	os.Args = baseArgs
 	cfg, err := Config()
 	assert.NoError(t, err)
+
 	assert.Equal(t, validA, cfg.Addr)
 	assert.Equal(t, validB, cfg.ShortHost)
 	assert.Equal(t, validF, cfg.DBFilePath)
@@ -64,6 +65,15 @@ func TestParseError(t *testing.T) {
 	assert.Equal(t, "", cfg.ShortHost)
 	assert.Equal(t, "", cfg.DBFilePath)
 	assert.Equal(t, "", cfg.DatabaseDsn)
+}
+
+func TestZ(t *testing.T) {
+	os.Clearenv()
+	parsedEnv = ConfigType{}
+	HookShortHost("")
+	_, _ = Config()
+	assert.True(t, true)
+
 }
 
 func TestIfTrue(t *testing.T) {

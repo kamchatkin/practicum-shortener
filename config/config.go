@@ -7,6 +7,9 @@ import (
 	"net/url"
 )
 
+const DefaultAlias = "qwerty"
+const DefaultSource = "https://ya.ru/"
+
 const DefaultAddr = ":8080"
 const DefaultShortHost = ""
 
@@ -34,15 +37,19 @@ type ConfigType struct {
 	DatabaseDsn string `env:"DATABASE_DSN"`
 }
 
+var useHookAddr = false
 var hookAddr = ""
 
 func HookAddr(val string) {
+	useHookAddr = true
 	hookAddr = val
 }
 
+var useHookShort = false
 var hookShortHost = ""
 
 func HookShortHost(val string) {
+	useHookShort = true
 	hookShortHost = val
 }
 
@@ -54,8 +61,12 @@ func Config() (*ConfigType, error) {
 		return &ConfigType{}, err
 	}
 
-	ifTrue(&hookAddr, &cfg.Addr)
-	ifTrue(&hookShortHost, &cfg.ShortHost)
+	if useHookAddr {
+		cfg.Addr = hookAddr
+	}
+	if useHookShort {
+		cfg.ShortHost = hookShortHost
+	}
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	err := validate.Struct(cfg)

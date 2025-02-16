@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"github.com/kamchatkin/practicum-shortener/config"
+	"github.com/kamchatkin/practicum-shortener/internal/data"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"math/rand"
 )
@@ -39,14 +39,29 @@ type aliasProps struct {
 }
 
 // makeAlias
-func makeAlias(ctx context.Context, props *aliasProps) (string, error) {
+func makeAlias(ctx context.Context, db *storage.Storage, props *aliasProps) (string, error) {
+	aliasKey, err := getShortCode(ctx, db)
+	if err != nil {
+		return "", fmt.Errorf("could not get short code for alias: %w", err)
+	}
+
+	err = data.Set(ctx, db, aliasKey, props.SourceURL)
+	if err != nil {
+		return "", errors.Join(errors.New("не удалось записать в бд"), err)
+	}
+
+	return getShortURL(aliasKey, props), nil
+}
+
+// @todo можно облегчить за счет контролируемого создания уникального кода
+func getShortCode(ctx context.Context, db *storage.Storage) (string, error) {
 	var aliasKey string
 	for i := range maxIterate {
 		aliasKey = shortness()
 
-		alias, err := storage.DB.Get(ctx, aliasKey)
-		//  проблема взаимодействия с БД
-		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		alias, err := data.Get(ctx, db, aliasKey)
+		// проблема взаимодействия с БД
+		if err != nil {
 			return "", fmt.Errorf("failed to get alias for %s: %w", aliasKey, err)
 		}
 
@@ -60,17 +75,16 @@ func makeAlias(ctx context.Context, props *aliasProps) (string, error) {
 		}
 	}
 
-	err := storage.DB.Set(ctx, aliasKey, props.SourceURL)
-	if err != nil {
-		return "", errors.Join(errors.New("не удалось записать в бд"), err)
-	}
+	return aliasKey, nil
+}
 
+func getShortURL(shortCode string, prop *aliasProps) string {
 	proto := "http"
-	if props.HTTPS {
+	if prop.HTTPS {
 		proto = "https"
 	}
 
-	host := props.Host
+	host := prop.Host
 
 	cfg, _ := config.Config() // игнорируем ошибку потому что это ни на что не влияет
 	if cfg.ShortHost != "" {
@@ -78,7 +92,7 @@ func makeAlias(ctx context.Context, props *aliasProps) (string, error) {
 		host = cfg.ShortHostURL.Host
 	}
 
-	return fmt.Sprintf("%s://%s/%s", proto, host, aliasKey), nil
+	return fmt.Sprintf("%s://%s/%s", proto, host, shortCode)
 }
 
 // shortness

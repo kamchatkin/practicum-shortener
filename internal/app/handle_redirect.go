@@ -2,7 +2,10 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/kamchatkin/practicum-shortener/internal/data"
+	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"net/http"
 	"time"
@@ -15,8 +18,17 @@ func RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
 	defer cancel()
 
-	alias, err := storage.DB.Get(ctx, ID)
+	logger := logs.NewLogger()
+
+	db, err := storage.NewStorage()
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	alias, err := data.Get(ctx, db, ID)
+	if err != nil {
+		logger.Error(fmt.Errorf("error get from DB key %s: %w", ID, err).Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

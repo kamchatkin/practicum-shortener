@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -38,8 +37,6 @@ func TestRedirect(t *testing.T) {
 			bodyMsg:      "",
 		},
 	}
-
-	storage.InitStorage()
 
 	for _, tc := range redirectTestCases {
 		t.Run(tc.method, func(t *testing.T) {

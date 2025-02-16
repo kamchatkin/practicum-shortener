@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
+	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"io"
 	"net/http"
 )
@@ -32,8 +33,13 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	db, err := storage.NewStorage()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
 	var shortURL string
-	shortURL, err = makeAlias(r.Context(), &aliasProps{
+	shortURL, err = makeAlias(r.Context(), db, &aliasProps{
 		SourceURL: string(sourceURL),
 		HTTPS:     r.TLS != nil,
 		Host:      r.Host,

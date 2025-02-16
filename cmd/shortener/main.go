@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/router"
@@ -27,7 +26,8 @@ func main() {
 		// before terminating.
 		logger.Info("Signal type : ", zap.String("signal", signalType.String()))
 		logger.Sync()
-		storage.DB.Close()
+		storage.Close()
+
 		os.Exit(0)
 	}()
 
@@ -40,20 +40,6 @@ func main() {
 	}
 	// Далее ошибку при получении конфигурации можно игнорировать
 	// @todo по хорошему рефакторинг, отдельный метод подготовки настроек и потом только получать объект
-
-	// Подготовка хранилища
-	err = storage.InitStorage()
-	if err != nil {
-		logger.Error(fmt.Errorf("ошибка инициализации БД: %w", err).Error())
-	}
-
-	if ok, err1 := storage.DB.Open(); !ok {
-		if err1 != nil {
-			logger.Error(err1.Error())
-		}
-
-		os.Exit(1)
-	}
 
 	if err := http.ListenAndServe(cfg.Addr, router.Router()); err != nil {
 		panic(err)

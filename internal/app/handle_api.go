@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
+	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"net/http"
 	"time"
 )
@@ -36,10 +37,15 @@ func HandleAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	db, err := storage.NewStorage()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
 	defer cancel()
 
-	shortURL, err := makeAlias(ctx, &aliasProps{
+	shortURL, err := makeAlias(ctx, db, &aliasProps{
 		SourceURL: toShort.URL,
 		HTTPS:     r.TLS != nil,
 		Host:      r.Host,
