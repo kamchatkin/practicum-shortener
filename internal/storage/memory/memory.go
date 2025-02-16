@@ -54,6 +54,12 @@ func (m *MemStorage) Get(_ context.Context, key string) (models.Alias, error) {
 	return m.asAlias(key, value.(string)), nil
 }
 
+func (m *MemStorage) GetBySource(_ context.Context, key string) (models.Alias, error) {
+	// @todo
+
+	return models.Alias{}, nil
+}
+
 func (m *MemStorage) Incr() {}
 func (m *MemStorage) Open() error {
 	return nil

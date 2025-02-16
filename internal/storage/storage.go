@@ -24,6 +24,9 @@ type Storage interface {
 	// Get Получает данные из хранилища по ключу
 	Get(ctx context.Context, key string) (models.Alias, error)
 
+	// GetBySource поиск по длинной ссылке
+	GetBySource(ctx context.Context, key string) (models.Alias, error)
+
 	// Incr Инкриминирует счетчик переходов по сокращению
 	Incr()
 

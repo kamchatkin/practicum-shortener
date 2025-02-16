@@ -37,6 +37,12 @@ func TestHandleAPI(t *testing.T) {
 			expectedBody: false,
 			expectedCode: http.StatusBadRequest,
 		},
+		{
+			name:         "iter13. Дубликат длинного URL",
+			body:         strings.NewReader("{\"url\":\"https://ya.ru/\"}"),
+			expectedBody: true,
+			expectedCode: http.StatusConflict,
+		},
 	}
 
 	for _, tt := range tests {

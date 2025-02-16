@@ -36,8 +36,9 @@ func NewPostgresStorage() (*PostgresStorage, error) {
 
 func (p *PostgresStorage) Set(ctx context.Context, key, value string) error {
 	_, err := db.Exec(ctx, "INSERT INTO aliases (alias, source) VALUES ($1, $2)", key, value)
+
 	if err != nil {
-		return fmt.Errorf("could not set alias: %w", err)
+		return err
 	}
 
 	return nil
@@ -80,6 +81,22 @@ func (p *PostgresStorage) Get(ctx context.Context, key string) (models.Alias, er
 
 	return alias, nil
 }
+
+func (p *PostgresStorage) GetBySource(ctx context.Context, source string) (models.Alias, error) {
+	var alias = models.Alias{}
+	err := db.QueryRow(ctx, "SELECT * FROM aliases WHERE source = $1", source).Scan(
+		&alias.Alias,
+		&alias.Source,
+		&alias.Quantity,
+		&alias.CreatedAt)
+
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return models.Alias{}, err
+	}
+
+	return alias, nil
+}
+
 func (p *PostgresStorage) Incr() {}
 
 func (p *PostgresStorage) Open() error {
@@ -124,6 +141,8 @@ create table if not exists aliases
 
 comment on table aliases is 'long to short and vice versa';
 
+create unique index aliases_source_uindex on aliases (source);
+
 comment on column aliases.quantity is 'redirects';
 `)
 	if err != nil {
@@ -132,8 +151,8 @@ comment on column aliases.quantity is 'redirects';
 
 	// посев первой строчки для тестов
 	_, err = conn.Exec(context.TODO(), "insert into aliases (alias, source) values (@alias, @source)", pgx.NamedArgs{
-		"alias":  "qwerty",
-		"source": "https://ya.ru/",
+		"alias":  config.DefaultAlias,
+		"source": config.DefaultSource,
 	})
 	if err != nil {
 		return fmt.Errorf("could not insert __FIRST__ alias: %w", err)

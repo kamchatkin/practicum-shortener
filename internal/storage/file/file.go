@@ -70,6 +70,13 @@ func (f *FileStorage) Get(_ context.Context, key string) (models.Alias, error) {
 
 	return f.asAlias(key, value.(string)), nil
 }
+
+func (f *FileStorage) GetBySource(_ context.Context, key string) (models.Alias, error) {
+	// @todo
+
+	return models.Alias{}, nil
+}
+
 func (f *FileStorage) Incr() {}
 
 // Open чтение с диска
