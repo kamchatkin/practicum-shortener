@@ -21,10 +21,15 @@ func TestGet(t *testing.T) {
 	m.EXPECT().Get(context.Background(), config.DefaultAlias).Return(value, nil)
 
 	var dbRef storage.Storage
-	dbRef = m
-	alias, err := Get(context.Background(), &dbRef, config.DefaultAlias)
+	alias, err := Get(context.Background(), getM(dbRef, m), config.DefaultAlias)
 	assert.NoError(t, err)
 	assert.Equal(t, config.DefaultSource, alias.Source)
+}
+
+func getM(dbRef storage.Storage, m *mocks.MockStorage) *storage.Storage {
+	dbRef = m
+
+	return &dbRef
 }
 
 func TestSet(t *testing.T) {
@@ -34,10 +39,9 @@ func TestSet(t *testing.T) {
 	m := mocks.NewMockStorage(ctrl)
 
 	m.EXPECT().Set(context.Background(), config.DefaultAlias, config.DefaultSource).Return(nil)
-	var dbRef storage.Storage
-	dbRef = m
 
-	err := Set(context.Background(), &dbRef, config.DefaultAlias, config.DefaultSource)
+	var dbRef storage.Storage
+	err := Set(context.Background(), getM(dbRef, m), config.DefaultAlias, config.DefaultSource)
 	assert.NoError(t, err)
 }
 
@@ -56,16 +60,14 @@ func TestSetBatch(t *testing.T) {
 	}
 
 	var dbRef storage.Storage
-	dbRef = m
-
 	m.EXPECT().SetBatch(context.Background(), batch).Return(nil)
-	err := SetBatch(context.Background(), &dbRef, batch)
+	err := SetBatch(context.Background(), getM(dbRef, m), batch)
 	assert.NoError(t, err)
 
 	alias := models.Alias{Alias: k1, Source: v1}
 
 	m.EXPECT().Get(context.Background(), k1).Return(alias, nil)
-	alias, err = Get(context.Background(), &dbRef, k1)
+	alias, err = Get(context.Background(), getM(dbRef, m), k1)
 
 	assert.NoError(t, err)
 	assert.True(t, alias.Found())

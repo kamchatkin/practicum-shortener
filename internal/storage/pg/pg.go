@@ -51,7 +51,7 @@ func (p *PostgresStorage) SetBatch(ctx context.Context, item map[string]string) 
 	}
 	defer tx.Rollback(context.TODO())
 
-	stmt, err := tx.Prepare(context.Background(), "insert_stmt", "insert into aliases (alias, source) VALUES (?, ?)")
+	stmt, err := tx.Prepare(context.Background(), "insert_stmt", "insert into aliases (alias, source) VALUES ($1, $2)")
 	if err != nil {
 		return fmt.Errorf("could not prepare statement: %w", err)
 	}
