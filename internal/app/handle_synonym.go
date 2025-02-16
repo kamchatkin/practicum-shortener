@@ -52,7 +52,7 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 	var shortURL string
 	shortURL, err = makeAlias(ctx, db, alProps)
 	if err != nil {
-		if isUniqueError(err) {
+		if (*db).IsUniqError(err) {
 			foundSourceURL, err := SearchOriginalALias(ctx, db, string(sourceURL), alProps)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)

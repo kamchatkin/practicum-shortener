@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
@@ -16,8 +17,9 @@ import (
 var memoryDB = &sync.Map{}
 var fStorage *FileStorage
 
-func init() {
+type UniqError error
 
+func init() {
 	memoryDB.Store("qwerty", "https://ya.ru/")
 }
 
@@ -48,6 +50,20 @@ type dbRecord struct {
 
 // Set
 func (f *FileStorage) Set(_ context.Context, key, value string) error {
+	uniqErr := false
+	memoryDB.Range(func(mKey, mValue any) bool {
+		if value == mValue {
+			uniqErr = true
+			return false
+		}
+
+		return true
+	})
+
+	if uniqErr {
+		return UniqError(fmt.Errorf("duplicate value"))
+	}
+
 	memoryDB.Store(key, value)
 
 	return nil
@@ -145,4 +161,8 @@ func (f *FileStorage) asAlias(key, value string) models.Alias {
 
 func (f *FileStorage) Ping(_ context.Context) error {
 	return nil
+}
+
+func (f *FileStorage) IsUniqError(err error) bool {
+	return errors.Is(err, UniqError(err))
 }

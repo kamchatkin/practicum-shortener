@@ -54,7 +54,7 @@ func HandleAPI(w http.ResponseWriter, r *http.Request) {
 
 	shortURL, err := makeAlias(ctx, db, alProps)
 	if err != nil {
-		if isUniqueError(err) {
+		if (*db).IsUniqError(err) {
 			foundSourceURL, err := SearchOriginalALias(ctx, db, toShort.URL, alProps)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)

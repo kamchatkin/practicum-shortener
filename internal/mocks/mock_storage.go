@@ -97,6 +97,20 @@ func (mr *MockStorageMockRecorder) Incr() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Incr", reflect.TypeOf((*MockStorage)(nil).Incr))
 }
 
+// IsUniqError mocks base method.
+func (m *MockStorage) IsUniqError(err error) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsUniqError", err)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsUniqError indicates an expected call of IsUniqError.
+func (mr *MockStorageMockRecorder) IsUniqError(err any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsUniqError", reflect.TypeOf((*MockStorage)(nil).IsUniqError), err)
+}
+
 // Open mocks base method.
 func (m *MockStorage) Open() error {
 	m.ctrl.T.Helper()

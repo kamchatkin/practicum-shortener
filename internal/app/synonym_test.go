@@ -44,7 +44,7 @@ func Test_SynonymGetShortURL(t *testing.T) {
 	})
 
 	assert.NotEmpty(t, url)
-	assert.Equal(t, "http://jj/:8080", url)
+	assert.Equal(t, "http://jj/"+cfg.Addr, url)
 }
 
 func Test_SynonymMakeAlias(t *testing.T) {

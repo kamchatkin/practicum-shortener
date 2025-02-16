@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/data"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
@@ -53,18 +51,6 @@ func makeAlias(ctx context.Context, db *storage.Storage, props *aliasProps) (str
 	}
 
 	return getShortURL(aliasKey, props), nil
-}
-
-func isUniqueError(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		switch pgErr.Code {
-		case pgerrcode.UniqueViolation:
-			return true
-		}
-	}
-
-	return false
 }
 
 func SearchOriginalALias(ctx context.Context, db *storage.Storage, sourceURL string, props *aliasProps) (string, error) {

@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/models"
@@ -115,6 +117,18 @@ func (p *PostgresStorage) Close() error {
 
 func (p *PostgresStorage) Ping(ctx context.Context) error {
 	return db.Ping(ctx)
+}
+
+func (p *PostgresStorage) IsUniqError(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case pgerrcode.UniqueViolation:
+			return true
+		}
+	}
+
+	return false
 }
 
 func prepareDB(conn *pgxpool.Pool) error {

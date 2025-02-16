@@ -35,6 +35,8 @@ type ConfigType struct {
 
 	// DatabaseDsn строка параметров соединения с БД
 	DatabaseDsn string `env:"DATABASE_DSN"`
+
+	TestENV bool `env:"TEST_ENV"`
 }
 
 var useHookAddr = false
@@ -118,6 +120,7 @@ func parseEnv(cfg *ConfigType) error {
 	ifTrue(&parsedEnv.ShortHost, &cfg.ShortHost)
 	ifTrue(&parsedEnv.DBFilePath, &cfg.DBFilePath)
 	ifTrue(&parsedEnv.DatabaseDsn, &cfg.DatabaseDsn)
+	cfg.TestENV = parsedEnv.TestENV
 
 	return nil
 }
