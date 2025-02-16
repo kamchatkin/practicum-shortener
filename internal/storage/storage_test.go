@@ -1,16 +1,12 @@
 package storage
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
-func TestInitStorage(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			InitStorage()
-		})
-	}
+func TestNewStorage(t *testing.T) {
+	st, err := NewStorage()
+	assert.NoError(t, err)
+	assert.NotNil(t, st)
 }

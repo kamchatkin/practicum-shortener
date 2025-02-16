@@ -1,7 +1,6 @@
 package app
 
 import (
-	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -45,8 +44,6 @@ func TestSynonymHandler(t *testing.T) {
 			expectedBody: ".",
 		},
 	}
-
-	storage.InitStorage()
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

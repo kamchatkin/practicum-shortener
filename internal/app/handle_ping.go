@@ -3,26 +3,24 @@ package app
 import (
 	"context"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
-	"github.com/kamchatkin/practicum-shortener/internal/storage/pg"
 	"net/http"
 	"time"
 )
 
 func HandlePing(w http.ResponseWriter, r *http.Request) {
-	switch storage.DB.(type) {
-	case *pg.PostgresStorage:
+	db, err := storage.NewStorage()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
-		defer cancel()
+	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+	defer cancel()
 
-		if err := storage.DB.Ping(ctx); err != nil {
-			w.WriteHeader(http.StatusServiceUnavailable)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-
-	default:
+	err = storage.Ping(ctx, db)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+
+	w.WriteHeader(http.StatusOK)
 }

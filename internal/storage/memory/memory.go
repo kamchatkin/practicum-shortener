@@ -2,23 +2,45 @@ package memory
 
 import (
 	"context"
+	"fmt"
 	"github.com/kamchatkin/practicum-shortener/internal/models"
 	"sync"
 	"time"
 )
 
 var memoryDB sync.Map
+var mems *MemStorage
 
 func init() {
 	memoryDB.Store("qwerty", "https://ya.ru/")
 }
 
-type MemStorage struct {
-	isOpened bool
+type MemStorage struct{}
+
+func NewMemStorage() (*MemStorage, error) {
+	if mems != nil {
+		return mems, nil
+	}
+
+	mems = &MemStorage{}
+	err := mems.Open()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open memory storage: %w", err)
+	}
+
+	return mems, nil
 }
 
 func (m *MemStorage) Set(_ context.Context, key, value string) error {
 	memoryDB.Store(key, value)
+
+	return nil
+}
+
+func (m *MemStorage) SetBatch(_ context.Context, item map[string]string) error {
+	for key, value := range item {
+		memoryDB.Store(key, value)
+	}
 
 	return nil
 }
@@ -33,16 +55,10 @@ func (m *MemStorage) Get(_ context.Context, key string) (models.Alias, error) {
 }
 
 func (m *MemStorage) Incr() {}
-func (m *MemStorage) Open() (bool, error) {
-	m.isOpened = true
-	return m.isOpened, nil
-}
-func (m *MemStorage) Opened() bool {
-	return m.isOpened
+func (m *MemStorage) Open() error {
+	return nil
 }
 func (m *MemStorage) Close() error {
-	m.isOpened = false
-
 	return nil
 }
 

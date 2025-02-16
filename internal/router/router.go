@@ -21,6 +21,8 @@ func Router() *chi.Mux {
 	// api, iter7
 	r.Post("/api/shorten", handleWrapper(app.HandleAPI))
 
+	r.Post("/api/shorten/batch", handleWrapper(app.HandleAPIBatch))
+
 	r.Get("/ping", handleWrapper(app.HandlePing))
 
 	return r

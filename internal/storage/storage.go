@@ -12,12 +12,14 @@ import (
 )
 
 // DB Публичный доступ к хранилищу
-var DB Storage
+var dbRef Storage
 
 // Storage интерфейс описывающий требования к хранилищу
 type Storage interface {
 	// Set запись в хранилище
 	Set(ctx context.Context, key string, value string) error
+
+	SetBatch(ctx context.Context, item map[string]string) error
 
 	// Get Получает данные из хранилища по ключу
 	Get(ctx context.Context, key string) (models.Alias, error)
@@ -26,10 +28,7 @@ type Storage interface {
 	Incr()
 
 	// Open Открывает хранилище. При загрузке приложения
-	Open() (bool, error)
-
-	// Opened Открыто ли хранилище? @deprecated
-	Opened() bool
+	Open() error
 
 	// Close Закрытие хранилища
 	Close() error
@@ -38,35 +37,49 @@ type Storage interface {
 	Ping(ctx context.Context) error
 }
 
-func InitStorage() error {
+func NewStorage() (*Storage, error) {
 	cfg, _ := config.Config()
 
-	logger := logs.NewLogger()
-
-	if DB != nil {
-		logger.Info("Storage already initialized")
-		return nil
+	if dbRef != nil {
+		return &dbRef, nil
 	}
+
+	logger := logs.NewLogger()
+	var err error
 
 	if cfg.DatabaseDsn != "" {
 		logger.Info("Выбрана БД: postgresql")
-		DB = &(pgStorage.PostgresStorage{})
-
-		err := pgStorage.PrepareDB()
+		dbRef, err = pgStorage.NewPostgresStorage()
 		if err != nil {
-			return fmt.Errorf("не удалось подготовить БД: %w", err)
+			return nil, fmt.Errorf("could not connect to postgresql: %w", err)
 		}
-		return nil
 	}
 
 	if cfg.DBFilePath != "" {
 		logger.Info("Выбрана БД: файловое хранилище")
-		DB = &(fileStorage.FileStorage{})
-		return nil
+		dbRef, err = fileStorage.NewFileStorage()
+		if err != nil {
+			return nil, fmt.Errorf("could not connect to fileStorage: %w", err)
+		}
 	}
 
-	logger.Info("Выбрана БД: в памяти приложения (до перезагрузки)")
-	DB = &(memoryStorage.MemStorage{})
+	if dbRef == nil {
+		logger.Info("Выбрана БД: в памяти приложения (до перезагрузки)")
+		dbRef, err = memoryStorage.NewMemStorage()
+		if err != nil {
+			return nil, fmt.Errorf("could not connect to memoryStorage: %w", err)
+		}
+	}
 
-	return nil
+	return &dbRef, nil
+}
+
+func Close() {
+	if dbRef != nil {
+		_ = dbRef.Close()
+	}
+}
+
+func Ping(ctx context.Context, db *Storage) error {
+	return (*db).Ping(ctx)
 }
