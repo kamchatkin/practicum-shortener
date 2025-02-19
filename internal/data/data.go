@@ -17,3 +17,7 @@ func SetBatch(ctx context.Context, db *storage.Storage, item map[string]string) 
 func Get(ctx context.Context, db *storage.Storage, key string) (models.Alias, error) {
 	return (*db).Get(ctx, key)
 }
+
+func GetBySource(ctx context.Context, db *storage.Storage, sourceKey string) (models.Alias, error) {
+	return (*db).GetBySource(ctx, sourceKey)
+}

@@ -28,4 +28,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require github.com/rogpeppe/go-internal v1.13.1 // indirect
+require (
+	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438 // indirect
+	github.com/rogpeppe/go-internal v1.13.1 // indirect
+)

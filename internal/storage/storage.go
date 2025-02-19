@@ -24,6 +24,9 @@ type Storage interface {
 	// Get Получает данные из хранилища по ключу
 	Get(ctx context.Context, key string) (models.Alias, error)
 
+	// GetBySource поиск по длинной ссылке
+	GetBySource(ctx context.Context, key string) (models.Alias, error)
+
 	// Incr Инкриминирует счетчик переходов по сокращению
 	Incr()
 
@@ -35,6 +38,8 @@ type Storage interface {
 
 	// Ping Тестовый запрос в хранилище для проверки работоспособности
 	Ping(ctx context.Context) error
+
+	IsUniqError(err error) bool
 }
 
 func NewStorage() (*Storage, error) {
@@ -47,7 +52,7 @@ func NewStorage() (*Storage, error) {
 	logger := logs.NewLogger()
 	var err error
 
-	if cfg.DatabaseDsn != "" {
+	if cfg.DatabaseDsn != "" && !cfg.TestENV {
 		logger.Info("Выбрана БД: postgresql")
 		dbRef, err = pgStorage.NewPostgresStorage()
 		if err != nil {
@@ -55,7 +60,7 @@ func NewStorage() (*Storage, error) {
 		}
 	}
 
-	if cfg.DBFilePath != "" {
+	if cfg.DBFilePath != "" && !cfg.TestENV {
 		logger.Info("Выбрана БД: файловое хранилище")
 		dbRef, err = fileStorage.NewFileStorage()
 		if err != nil {
@@ -63,7 +68,7 @@ func NewStorage() (*Storage, error) {
 		}
 	}
 
-	if dbRef == nil {
+	if dbRef == nil || cfg.TestENV {
 		logger.Info("Выбрана БД: в памяти приложения (до перезагрузки)")
 		dbRef, err = memoryStorage.NewMemStorage()
 		if err != nil {

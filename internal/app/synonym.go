@@ -53,6 +53,15 @@ func makeAlias(ctx context.Context, db *storage.Storage, props *aliasProps) (str
 	return getShortURL(aliasKey, props), nil
 }
 
+func SearchOriginalALias(ctx context.Context, db *storage.Storage, sourceURL string, props *aliasProps) (string, error) {
+	alias, err := data.GetBySource(ctx, db, sourceURL)
+	if err != nil {
+		return "", err
+	}
+
+	return getShortURL(alias.Alias, props), nil
+}
+
 // @todo можно облегчить за счет контролируемого создания уникального кода
 func getShortCode(ctx context.Context, db *storage.Storage) (string, error) {
 	var aliasKey string

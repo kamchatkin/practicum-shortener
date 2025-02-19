@@ -13,12 +13,14 @@ import (
 	"testing"
 )
 
-var baseURL = "http://localhost/?test"
+func baseURL() string {
+	return "http://localhost/?q=" + shortness()
+}
 
 func TestShortener(t *testing.T) {
-
+	_base := baseURL()
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(baseURL))
+	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(_base))
 	SynonymHandler(w, r)
 
 	resp := w.Result()
@@ -43,16 +45,17 @@ func TestShortener(t *testing.T) {
 	resp2 := w2.Result()
 	defer resp2.Body.Close()
 	assert.Equal(t, http.StatusTemporaryRedirect, resp2.StatusCode)
-	assert.Equal(t, baseURL, w2.Header().Get("Location"))
+	assert.Equal(t, _base, w2.Header().Get("Location"))
 }
 
 func TestShortenerWithConfig(t *testing.T) {
 	shortHost := "http://ya.ru"
+	_base := baseURL()
 
 	config.HookShortHost(shortHost)
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(baseURL))
+	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(_base))
 	SynonymHandler(w, r)
 
 	resp := w.Result()

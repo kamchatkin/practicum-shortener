@@ -28,6 +28,8 @@ var invalidD = "postgresusernamepasswordlocalhost5432database_name"
 // TestParseArgs Тест аргументов
 func TestParseArgs(t *testing.T) {
 	os.Args = baseArgs
+	os.Unsetenv("SERVER_ADDRESS")
+	os.Unsetenv("DATABASE_DSN")
 	cfg, err := Config()
 	assert.NoError(t, err)
 
@@ -65,15 +67,6 @@ func TestParseError(t *testing.T) {
 	assert.Equal(t, "", cfg.ShortHost)
 	assert.Equal(t, "", cfg.DBFilePath)
 	assert.Equal(t, "", cfg.DatabaseDsn)
-}
-
-func TestZ(t *testing.T) {
-	os.Clearenv()
-	parsedEnv = ConfigType{}
-	HookShortHost("")
-	_, _ = Config()
-	assert.True(t, true)
-
 }
 
 func TestIfTrue(t *testing.T) {

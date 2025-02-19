@@ -10,6 +10,9 @@ create table if not exists aliases
 
 comment on table aliases is 'long to short and vice versa';
 
+create unique index aliases_source_uindex
+    on aliases (source);
+
 comment on column aliases.quantity is 'redirects';
 
 
