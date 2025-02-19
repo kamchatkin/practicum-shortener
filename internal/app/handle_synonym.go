@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
@@ -38,6 +39,7 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 	db, err := storage.NewStorage()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
@@ -52,20 +54,13 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 	var shortURL string
 	shortURL, err = makeAlias(ctx, db, alProps)
 	if err != nil {
-		if (*db).IsUniqError(err) {
-			foundSourceURL, err := SearchOriginalALias(ctx, db, string(sourceURL), alProps)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
+		if errors.Is(err, ErrUniq) {
 			w.WriteHeader(http.StatusConflict)
-			w.Write([]byte(foundSourceURL))
+			w.Write([]byte(shortURL))
 			return
 		}
 
-		logger.Error(err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

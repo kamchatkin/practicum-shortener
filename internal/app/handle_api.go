@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"net/http"
@@ -54,16 +55,9 @@ func HandleAPI(w http.ResponseWriter, r *http.Request) {
 
 	shortURL, err := makeAlias(ctx, db, alProps)
 	if err != nil {
-		if (*db).IsUniqError(err) {
-			foundSourceURL, err := SearchOriginalALias(ctx, db, toShort.URL, alProps)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		if errors.Is(err, ErrUniq) {
 			w.WriteHeader(http.StatusConflict)
-			_ = json.NewEncoder(w).Encode(APIResponse{Result: foundSourceURL})
+			w.Write([]byte(shortURL))
 			return
 		}
 

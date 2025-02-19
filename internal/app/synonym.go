@@ -10,6 +10,8 @@ import (
 	"math/rand"
 )
 
+var ErrUniq error
+
 var words []rune
 var wordsQuantity = 0
 
@@ -47,6 +49,16 @@ func makeAlias(ctx context.Context, db *storage.Storage, props *aliasProps) (str
 
 	err = data.Set(ctx, db, aliasKey, props.SourceURL)
 	if err != nil {
+
+		if (*db).IsUniqError(err) {
+			origSourceURL, err := SearchOriginalALias(ctx, db, props.SourceURL, props)
+			if err != nil {
+				return "", err
+			}
+
+			return origSourceURL, ErrUniq
+		}
+
 		return "", errors.Join(errors.New("не удалось записать в бд"), err)
 	}
 

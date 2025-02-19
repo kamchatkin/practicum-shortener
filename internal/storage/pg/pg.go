@@ -69,31 +69,24 @@ func (p *PostgresStorage) SetBatch(ctx context.Context, item map[string]string) 
 	return tx.Commit(context.TODO())
 }
 
-func (p *PostgresStorage) Get(ctx context.Context, key string) (models.Alias, error) {
-	var alias = models.Alias{}
-	err := db.QueryRow(ctx, "SELECT * FROM aliases WHERE alias = $1", key).Scan(
-		&alias.Alias,
-		&alias.Source,
-		&alias.Quantity,
-		&alias.CreatedAt)
-
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return models.Alias{}, err
-	}
-
-	return alias, nil
+func (p *PostgresStorage) Get(ctx context.Context, alias string) (models.Alias, error) {
+	return p.row(ctx, "alias", alias)
 }
 
 func (p *PostgresStorage) GetBySource(ctx context.Context, source string) (models.Alias, error) {
+	return p.row(ctx, "source", source)
+}
+
+func (p *PostgresStorage) row(ctx context.Context, column, value string) (models.Alias, error) {
 	var alias = models.Alias{}
-	err := db.QueryRow(ctx, "SELECT * FROM aliases WHERE source = $1", source).Scan(
+	err := db.QueryRow(ctx, "SELECT * FROM aliases WHERE $1 = $2", column, value).Scan(
 		&alias.Alias,
 		&alias.Source,
 		&alias.Quantity,
 		&alias.CreatedAt)
 
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return models.Alias{}, err
+		return alias, err
 	}
 
 	return alias, nil
