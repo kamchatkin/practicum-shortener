@@ -71,10 +71,17 @@ func (m *MemStorage) Get(_ context.Context, key string) (models.Alias, error) {
 	return m.asAlias(key, value.(string)), nil
 }
 
-func (m *MemStorage) GetBySource(_ context.Context, key string) (models.Alias, error) {
-	// @todo
+func (m *MemStorage) GetBySource(_ context.Context, source string) (models.Alias, error) {
+	shortKey := ""
+	memoryDB.Range(func(mKey, mValue any) bool {
+		if mValue == source {
+			shortKey = mKey.(string)
+		}
 
-	return models.Alias{}, nil
+		return true
+	})
+
+	return m.asAlias(shortKey, source), nil
 }
 
 func (m *MemStorage) Incr() {}

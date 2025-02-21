@@ -10,7 +10,7 @@ import (
 	"math/rand"
 )
 
-var ErrUniq error
+var ErrUniq = errors.New("errUniq")
 
 var words []rune
 var wordsQuantity = 0
@@ -51,12 +51,15 @@ func makeAlias(ctx context.Context, db *storage.Storage, props *aliasProps) (str
 	if err != nil {
 
 		if (*db).IsUniqError(err) {
-			origSourceURL, err := SearchOriginalALias(ctx, db, props.SourceURL, props)
+			fmt.Println("Uniq err")
+			fmt.Println("props.SourceURL", props.SourceURL)
+			origShortURL, err := SearchOriginalALias(ctx, db, props.SourceURL, props)
+			fmt.Printf("orig: %+v  err: %+v\n", origShortURL, err)
 			if err != nil {
 				return "", err
 			}
 
-			return origSourceURL, ErrUniq
+			return origShortURL, ErrUniq
 		}
 
 		return "", errors.Join(errors.New("не удалось записать в бд"), err)
@@ -65,11 +68,14 @@ func makeAlias(ctx context.Context, db *storage.Storage, props *aliasProps) (str
 	return getShortURL(aliasKey, props), nil
 }
 
+// SearchOriginalALias
 func SearchOriginalALias(ctx context.Context, db *storage.Storage, sourceURL string, props *aliasProps) (string, error) {
 	alias, err := data.GetBySource(ctx, db, sourceURL)
 	if err != nil {
 		return "", err
 	}
+
+	fmt.Printf("%+v\t => \t%+v", alias, err)
 
 	return getShortURL(alias.Alias, props), nil
 }

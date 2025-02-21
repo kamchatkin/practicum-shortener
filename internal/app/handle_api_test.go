@@ -2,6 +2,8 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -39,7 +41,7 @@ func TestHandleAPI(t *testing.T) {
 		},
 		{
 			name:         "iter13. Дубликат длинного URL",
-			body:         strings.NewReader("{\"url\":\"https://ya.ru/\"}"),
+			body:         strings.NewReader("{\"url\":\"" + config.DefaultSource + "\"}"),
 			expectedBody: true,
 			expectedCode: http.StatusConflict,
 		},
@@ -48,6 +50,7 @@ func TestHandleAPI(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			requestTo := httptest.NewRequest(http.MethodPost, "/api/shorten", tt.body)
+			requestTo.Host = "localhost"
 			responseTo := httptest.NewRecorder()
 
 			HandleAPI(responseTo, requestTo)
@@ -57,15 +60,13 @@ func TestHandleAPI(t *testing.T) {
 
 			assert.Equal(t, tt.expectedCode, response.StatusCode)
 			if tt.expectedBody {
-				responseBody := responseTo.Body.String()
-				if assert.NotEmpty(t, responseBody) {
-					resp := APIResponse{}
-					err := json.NewDecoder(strings.NewReader(responseBody)).Decode(&resp)
-					assert.NoError(t, err)
+				resp := APIResponse{}
+				err := json.NewDecoder(response.Body).Decode(&resp)
+				fmt.Printf("\nerr %+v\n", err)
+				assert.NoError(t, err)
 
-					err = validate.Struct(resp)
-					assert.NoError(t, err)
-				}
+				err = validate.Struct(resp)
+				assert.NoError(t, err)
 			}
 		})
 	}
