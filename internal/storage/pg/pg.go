@@ -79,7 +79,8 @@ func (p *PostgresStorage) GetBySource(ctx context.Context, source string) (model
 
 func (p *PostgresStorage) row(ctx context.Context, column, value string) (models.Alias, error) {
 	var alias = models.Alias{}
-	err := db.QueryRow(ctx, "SELECT * FROM aliases WHERE $1 = $2", column, value).Scan(
+	sql := fmt.Sprintf("SELECT * FROM aliases WHERE %s = $1", column)
+	err := db.QueryRow(ctx, sql, value).Scan(
 		&alias.Alias,
 		&alias.Source,
 		&alias.Quantity,
