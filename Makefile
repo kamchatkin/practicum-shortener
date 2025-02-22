@@ -1,7 +1,7 @@
 PORT=3000
 
 run:
-	SERVER_ADDRESS=:3000 DATABASE_DSN=postgres://goadv:goadv@goadv-db:5432/goadv go run ./cmd/shortener
+	go run ./cmd/shortener
 
 get:
 	curl -X GET -i 'http://localhost:${PORT}/qwerty'
@@ -33,6 +33,3 @@ apiz:
 
 c:
 	docker exec -ti goadv bash
-
-tern:
-

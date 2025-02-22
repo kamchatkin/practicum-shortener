@@ -52,27 +52,20 @@ func HandleAPI(w http.ResponseWriter, r *http.Request) {
 		Host:      r.Host,
 	}
 
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	shortURL, err := makeAlias(ctx, db, alProps)
 	if err != nil {
-		if (*db).IsUniqError(err) {
-			foundSourceURL, err := SearchOriginalALias(ctx, db, toShort.URL, alProps)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		switch err {
+		case ErrUniq:
 			w.WriteHeader(http.StatusConflict)
-			_ = json.NewEncoder(w).Encode(APIResponse{Result: foundSourceURL})
+		default:
+			logger.Error(err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
-		logger.Error(err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-		return
+	} else {
+		w.WriteHeader(http.StatusCreated)
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(APIResponse{Result: shortURL})
 }

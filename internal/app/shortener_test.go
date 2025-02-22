@@ -21,12 +21,14 @@ func TestShortener(t *testing.T) {
 	_base := baseURL()
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(_base))
+	r.Host = "localhost"
 	SynonymHandler(w, r)
 
 	resp := w.Result()
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	shortURL := w.Body.String()
+	fmt.Printf("shortURL: %+v\n", shortURL)
 	_, err := url.ParseRequestURI(shortURL)
 	assert.Nil(t, err, "В ответ на сокращение ожидается URL")
 

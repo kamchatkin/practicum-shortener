@@ -87,10 +87,17 @@ func (f *FileStorage) Get(_ context.Context, key string) (models.Alias, error) {
 	return f.asAlias(key, value.(string)), nil
 }
 
-func (f *FileStorage) GetBySource(_ context.Context, key string) (models.Alias, error) {
-	// @todo
+func (f *FileStorage) GetBySource(_ context.Context, source string) (models.Alias, error) {
+	shortKey := ""
+	memoryDB.Range(func(mKey, mValue any) bool {
+		if mValue == source {
+			shortKey = mKey.(string)
+		}
 
-	return models.Alias{}, nil
+		return true
+	})
+
+	return f.asAlias(shortKey, source), nil
 }
 
 func (f *FileStorage) Incr() {}

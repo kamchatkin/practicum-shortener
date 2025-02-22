@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"io"
@@ -38,6 +37,7 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 	db, err := storage.NewStorage()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
@@ -49,27 +49,22 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 		Host:      r.Host,
 	}
 
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
 	var shortURL string
 	shortURL, err = makeAlias(ctx, db, alProps)
 	if err != nil {
-		if (*db).IsUniqError(err) {
-			foundSourceURL, err := SearchOriginalALias(ctx, db, string(sourceURL), alProps)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
+		switch err {
+		case ErrUniq:
 			w.WriteHeader(http.StatusConflict)
-			w.Write([]byte(foundSourceURL))
+		default:
+			logger.Error(err.Error())
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
-		logger.Error(err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-		return
+	} else {
+		w.WriteHeader(http.StatusCreated)
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	_, _ = fmt.Fprint(w, shortURL)
+	w.Write([]byte(shortURL))
 }
