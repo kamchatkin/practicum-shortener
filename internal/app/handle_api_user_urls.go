@@ -31,11 +31,10 @@ func HandleAPIUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := auth.GetUserID(userCookie.Value)
-	if userID < 1 {
-		logger.Info("1")
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
+	//if userID < 1 {
+	//	w.WriteHeader(http.StatusUnauthorized)
+	//	return
+	//}
 
 	db, err := storage.NewStorage()
 	if err != nil {
@@ -55,7 +54,6 @@ func HandleAPIUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(aliases) == 0 {
-		logger.Info("2")
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
