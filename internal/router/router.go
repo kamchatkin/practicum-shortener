@@ -16,6 +16,8 @@ func Router() *chi.Mux {
 	// Сокращение
 	r.Post("/", handleWrapper(app.SynonymHandler))
 
+	r.Get("/", handleWrapper(app.BlankHandler))
+
 	// Переадресация
 	r.Get("/{id}", handleWrapper(app.RedirectHandler))
 

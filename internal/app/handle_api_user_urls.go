@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/kamchatkin/practicum-shortener/internal/auth"
 	"github.com/kamchatkin/practicum-shortener/internal/data"
+	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"net/http"
 	"time"
@@ -20,20 +21,25 @@ func HandleAPIUserURLs(w http.ResponseWriter, r *http.Request) {
 	// который сможет вернуть пользователю
 	// все когда-либо сокращённые им URL в формате:
 
+	logger := logs.NewLogger()
+
 	userCookie, err := r.Cookie(auth.CookineName)
 	if err != nil {
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
 	userID := auth.GetUserID(userCookie.Value)
 	if userID < 1 {
+		logger.Info("1")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
 	db, err := storage.NewStorage()
 	if err != nil {
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -43,11 +49,13 @@ func HandleAPIUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	aliases, err := data.UserAliases(ctx, db, userID)
 	if err != nil {
+		logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(aliases) == 0 {
+		logger.Info("2")
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}

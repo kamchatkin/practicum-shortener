@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/models"
+	"strings"
 	"time"
 )
 
@@ -141,7 +142,7 @@ func (p *PostgresStorage) RegisterUser(ctx context.Context) (int64, error) {
 func (p *PostgresStorage) UserAliases(ctx context.Context, userID int64) ([]*models.Alias, error) {
 	var aliases []*models.Alias
 
-	rows, err := db.Query(ctx, "select * from aliases where user_id = $1", userID)
+	rows, err := db.Query(ctx, "select alias, source, quantity, created_at::text, user_id from aliases where user_id = $1", userID)
 	if err != nil {
 		return aliases, fmt.Errorf("could not get aliases from DB: %w", err)
 	}
@@ -150,13 +151,13 @@ func (p *PostgresStorage) UserAliases(ctx context.Context, userID int64) ([]*mod
 	for rows.Next() {
 		alias := &models.Alias{}
 
-		err = rows.Scan(&alias.Alias, &alias.Source, &alias.Quantity, &createdAt, &alias.UserID)
+		err = rows.Scan(&alias.Alias, &alias.Source, &alias.Quantity, createdAt, &alias.UserID)
 		if err != nil {
 			return aliases, fmt.Errorf("could not scan row: %w", err)
 		}
 
 		var t time.Time
-		if t, err = time.Parse("06.02.01", *createdAt); err != nil {
+		if t, err = time.Parse("2006-01-02", strings.Split(*createdAt, " ")[0]); err != nil {
 			return nil, err
 		}
 

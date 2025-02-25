@@ -23,6 +23,7 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 
 	sourceURL, err := io.ReadAll(r.Body)
 	if err != nil {
+		logger.Info("1")
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -30,6 +31,7 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = validate.Var(string(sourceURL), "url")
 	if err != nil {
+		logger.Info("2")
 		logger.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -37,6 +39,8 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := storage.NewStorage()
 	if err != nil {
+		logger.Error(err.Error())
+		logger.Info("3")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -57,13 +61,16 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case ErrUniq:
+			logger.Info("4")
 			w.WriteHeader(http.StatusConflict)
 		default:
+			logger.Info("5")
 			logger.Error(err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 	} else {
+		logger.Info("6")
 		w.WriteHeader(http.StatusCreated)
 	}
 

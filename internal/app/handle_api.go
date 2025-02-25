@@ -53,7 +53,6 @@ func HandleAPI(w http.ResponseWriter, r *http.Request) {
 		Host:      r.Host,
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	shortURL, err := makeAlias(ctx, db, alProps, auth.GetUserIDFromCookie(r))
 	if err != nil {
 		switch err {
@@ -65,6 +64,7 @@ func HandleAPI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
 	}
 
