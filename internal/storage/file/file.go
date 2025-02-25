@@ -164,7 +164,8 @@ func (f *FileStorage) Open() error {
 	linksMU.Lock()
 	defer linksMU.Unlock()
 
-	links[-1] = []string{}
+	links = map[int64][]string{}
+	links[-1] = []string{"qwerty"}
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
