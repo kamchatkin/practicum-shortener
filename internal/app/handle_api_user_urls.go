@@ -26,10 +26,10 @@ func HandleAPIUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	userID := auth.GetUserIDFromCookie(r)
 	logger.Info("userID", zap.Int64("userID", userID))
-	//if userID < 1 {
-	//	w.WriteHeader(http.StatusUnauthorized)
-	//	return
-	//}
+	if userID < 1 {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
