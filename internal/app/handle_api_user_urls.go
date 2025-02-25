@@ -53,10 +53,15 @@ func HandleAPIUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	aliasProperties := aliasProps{
+		SourceURL: "",
+		HTTPS:     r.TLS != nil,
+		Host:      r.Host,
+	}
 	var responseAliases []*UserURLsResponse
 	for _, alias := range aliases {
 		responseAliases = append(responseAliases, &UserURLsResponse{
-			ShortURL:    alias.Alias,
+			ShortURL:    getShortURL(alias.Alias, &aliasProperties),
 			OriginalURL: alias.Source,
 		})
 	}
