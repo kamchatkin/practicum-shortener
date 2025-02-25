@@ -39,8 +39,8 @@ func WithAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		logger.Info("Setting new cookie")
-		http.SetCookie(w, &http.Cookie{
+		// кука на чувашском дядя
+		cuca := &http.Cookie{
 			Name:     auth.CookineName,
 			Value:    token,
 			Path:     "/",
@@ -49,7 +49,11 @@ func WithAuth(next http.HandlerFunc) http.HandlerFunc {
 			Secure:   true,
 			SameSite: http.SameSiteLaxMode,
 			Domain:   r.Host,
-		})
+		}
+
+		logger.Info("Setting new cookie")
+		http.SetCookie(w, cuca)
+		r.AddCookie(cuca)
 
 		next.ServeHTTP(w, r)
 	}
