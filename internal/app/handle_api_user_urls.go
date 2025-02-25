@@ -23,18 +23,13 @@ func HandleAPIUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	logger := logs.NewLogger()
 
-	userCookie, err := r.Cookie(auth.CookineName)
-	if err != nil {
-		logger.Error(err.Error())
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	userID := auth.GetUserID(userCookie.Value)
+	userID := auth.GetUserIDFromCookie(r)
 	//if userID < 1 {
 	//	w.WriteHeader(http.StatusUnauthorized)
 	//	return
 	//}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	db, err := storage.NewStorage()
 	if err != nil {
@@ -66,7 +61,6 @@ func HandleAPIUserURLs(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(responseAliases)
 }
