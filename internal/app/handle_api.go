@@ -57,6 +57,7 @@ func HandleAPI(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case ErrUniq:
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			w.WriteHeader(http.StatusConflict)
 		default:
 			logger.Error(err.Error())
