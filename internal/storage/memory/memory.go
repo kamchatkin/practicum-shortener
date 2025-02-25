@@ -107,17 +107,17 @@ func (m *MemStorage) RegisterUser(_ context.Context) (int64, error) {
 	return rand.Int63(), nil
 }
 
-func (m *MemStorage) UserAliases(_ context.Context, userId int64) ([]*models.Alias, error) {
+func (m *MemStorage) UserAliases(_ context.Context, userID int64) ([]*models.Alias, error) {
 	var aliases []*models.Alias
 
-	if userId < 0 {
-		return aliases, errors.New("invalid userId")
+	if userID < 0 {
+		return aliases, errors.New("invalid userID")
 	}
 
 	linksMU.RLock()
 	defer linksMU.RUnlock()
 
-	userShorts, ok := links[userId]
+	userShorts, ok := links[userID]
 	if !ok {
 		return aliases, nil
 	}

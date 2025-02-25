@@ -43,7 +43,7 @@ type Storage interface {
 
 	RegisterUser(ctx context.Context) (int64, error)
 
-	UserAliases(ctx context.Context, userId int64) ([]*models.Alias, error)
+	UserAliases(ctx context.Context, userID int64) ([]*models.Alias, error)
 }
 
 func NewStorage() (*Storage, error) {

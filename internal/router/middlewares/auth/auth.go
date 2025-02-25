@@ -44,7 +44,7 @@ func WithAuth(next http.HandlerFunc) http.HandlerFunc {
 			Name:     auth.CookineName,
 			Value:    token,
 			Path:     "/",
-			MaxAge:   int(auth.TOKEN_EXP.Seconds()),
+			MaxAge:   int(auth.TokenExp.Seconds()),
 			HttpOnly: true,
 			Secure:   true,
 			SameSite: http.SameSiteLaxMode,

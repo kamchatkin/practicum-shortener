@@ -125,24 +125,24 @@ func (f *FileStorage) RegisterUser(_ context.Context) (int64, error) {
 	return rand.Int63(), nil
 }
 
-func (m *FileStorage) UserAliases(_ context.Context, userId int64) ([]*models.Alias, error) {
+func (f *FileStorage) UserAliases(_ context.Context, userID int64) ([]*models.Alias, error) {
 	var aliases []*models.Alias
 
-	if userId < 0 {
-		return aliases, errors.New("invalid userId")
+	if userID < 0 {
+		return aliases, errors.New("invalid userID")
 	}
 
 	linksMU.RLock()
 	defer linksMU.RUnlock()
 
-	userShorts, ok := links[userId]
+	userShorts, ok := links[userID]
 	if !ok {
 		return aliases, nil
 	}
 
 	for _, uShort := range userShorts {
 		value, _ := memoryDB.Load(uShort)
-		alias := m.asAlias(uShort, value.(string))
+		alias := f.asAlias(uShort, value.(string))
 		aliases = append(aliases, &alias)
 	}
 

@@ -183,16 +183,16 @@ func (mr *MockStorageMockRecorder) SetBatch(ctx, item, userID any) *gomock.Call 
 }
 
 // UserAliases mocks base method.
-func (m *MockStorage) UserAliases(ctx context.Context, userId int64) ([]*models.Alias, error) {
+func (m *MockStorage) UserAliases(ctx context.Context, userID int64) ([]*models.Alias, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UserAliases", ctx, userId)
+	ret := m.ctrl.Call(m, "UserAliases", ctx, userID)
 	ret0, _ := ret[0].([]*models.Alias)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UserAliases indicates an expected call of UserAliases.
-func (mr *MockStorageMockRecorder) UserAliases(ctx, userId any) *gomock.Call {
+func (mr *MockStorageMockRecorder) UserAliases(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserAliases", reflect.TypeOf((*MockStorage)(nil).UserAliases), ctx, userId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserAliases", reflect.TypeOf((*MockStorage)(nil).UserAliases), ctx, userID)
 }

@@ -38,10 +38,14 @@ func HandleAPIUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 1*me.Second)
 	defer cancel()
 
 	aliases, err := data.UserAliases(ctx, db, userID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	if len(aliases) == 0 {
 		w.WriteHeader(http.StatusNoContent)
