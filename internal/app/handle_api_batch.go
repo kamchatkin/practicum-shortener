@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/kamchatkin/practicum-shortener/internal/auth"
 	"github.com/kamchatkin/practicum-shortener/internal/data"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
@@ -63,7 +64,7 @@ func HandleAPIBatch(w http.ResponseWriter, r *http.Request) {
 		toStore[shortCode] = from.OriginalURL
 	}
 
-	err = data.SetBatch(ctx, db, toStore)
+	err = data.SetBatch(ctx, db, toStore, auth.GetUserIDFromCookie(r))
 	if err != nil {
 		logger.Error(fmt.Errorf("could not store batch: %w", err).Error())
 		w.WriteHeader(http.StatusInternalServerError)

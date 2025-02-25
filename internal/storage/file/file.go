@@ -9,6 +9,7 @@ import (
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/models"
+	"math/rand"
 	"os"
 	"sync"
 	"time"
@@ -16,6 +17,11 @@ import (
 
 var memoryDB = &sync.Map{}
 var fStorage *FileStorage
+
+var (
+	linksMU sync.RWMutex
+	links   map[int64][]string
+)
 
 type UniqError error
 
@@ -49,7 +55,7 @@ type dbRecord struct {
 }
 
 // Set
-func (f *FileStorage) Set(_ context.Context, key, value string) error {
+func (f *FileStorage) Set(_ context.Context, key, value string, userID int64) error {
 	uniqErr := false
 	memoryDB.Range(func(mKey, mValue any) bool {
 		if value == mValue {
@@ -66,13 +72,28 @@ func (f *FileStorage) Set(_ context.Context, key, value string) error {
 
 	memoryDB.Store(key, value)
 
+	memoryDB.Store(key, value)
+	linksMU.Lock()
+	if _, ok := links[userID]; !ok {
+		links[userID] = []string{}
+	}
+	links[userID] = append(links[userID], key)
+	linksMU.Unlock()
+
 	return nil
 }
 
-func (f *FileStorage) SetBatch(_ context.Context, item map[string]string) error {
+func (f *FileStorage) SetBatch(_ context.Context, item map[string]string, userID int64) error {
+	linksMU.Lock()
 	for key, value := range item {
 		memoryDB.Store(key, value)
+
+		if _, ok := links[userID]; !ok {
+			links[userID] = []string{}
+		}
+		links[userID] = append(links[userID], key)
 	}
+	linksMU.Unlock()
 
 	return nil
 }
@@ -100,6 +121,34 @@ func (f *FileStorage) GetBySource(_ context.Context, source string) (models.Alia
 	return f.asAlias(shortKey, source), nil
 }
 
+func (f *FileStorage) RegisterUser(_ context.Context) (int64, error) {
+	return rand.Int63(), nil
+}
+
+func (m *FileStorage) UserAliases(_ context.Context, userId int64) ([]*models.Alias, error) {
+	var aliases []*models.Alias
+
+	if userId < 0 {
+		return aliases, errors.New("invalid userId")
+	}
+
+	linksMU.RLock()
+	defer linksMU.RUnlock()
+
+	userShorts, ok := links[userId]
+	if !ok {
+		return aliases, nil
+	}
+
+	for _, uShort := range userShorts {
+		value, _ := memoryDB.Load(uShort)
+		alias := m.asAlias(uShort, value.(string))
+		aliases = append(aliases, &alias)
+	}
+
+	return aliases, nil
+}
+
 func (f *FileStorage) Incr() {}
 
 // Open чтение с диска
@@ -112,11 +161,17 @@ func (f *FileStorage) Open() error {
 	}
 	defer file.Close()
 
+	linksMU.Lock()
+	defer linksMU.Unlock()
+
+	links[-1] = []string{}
+
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		rec := dbRecord{}
 		_ = json.Unmarshal([]byte(scanner.Text()), &rec)
 		memoryDB.Store(rec.Alias, rec.Source)
+		links[-1] = append(links[-1], rec.Alias)
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/kamchatkin/practicum-shortener/internal/auth"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"io"
@@ -52,7 +53,7 @@ func SynonymHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
 	var shortURL string
-	shortURL, err = makeAlias(ctx, db, alProps)
+	shortURL, err = makeAlias(ctx, db, alProps, auth.GetUserIDFromCookie(r))
 	if err != nil {
 		switch err {
 		case ErrUniq:

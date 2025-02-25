@@ -28,7 +28,6 @@ func TestShortener(t *testing.T) {
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	shortURL := w.Body.String()
-	fmt.Printf("shortURL: %+v\n", shortURL)
 	_, err := url.ParseRequestURI(shortURL)
 	assert.Nil(t, err, "В ответ на сокращение ожидается URL")
 

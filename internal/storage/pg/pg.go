@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/models"
+	"time"
 )
 
 var db *pgxpool.Pool
@@ -36,8 +37,8 @@ func NewPostgresStorage() (*PostgresStorage, error) {
 	return pgs, nil
 }
 
-func (p *PostgresStorage) Set(ctx context.Context, key, value string) error {
-	_, err := db.Exec(ctx, "INSERT INTO aliases (alias, source) VALUES ($1, $2)", key, value)
+func (p *PostgresStorage) Set(ctx context.Context, key, value string, userID int64) error {
+	_, err := db.Exec(ctx, "INSERT INTO aliases (alias, source, user_id) VALUES ($1, $2, $3)", key, value, userID)
 
 	if err != nil {
 		return err
@@ -47,20 +48,20 @@ func (p *PostgresStorage) Set(ctx context.Context, key, value string) error {
 }
 
 // SetBatch Мульти-вставка
-func (p *PostgresStorage) SetBatch(ctx context.Context, item map[string]string) error {
+func (p *PostgresStorage) SetBatch(ctx context.Context, item map[string]string, userID int64) error {
 	tx, err := db.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %w", err)
 	}
 	defer tx.Rollback(context.TODO())
 
-	stmt, err := tx.Prepare(context.Background(), "insert_stmt", "insert into aliases (alias, source) VALUES ($1, $2)")
+	stmt, err := tx.Prepare(context.Background(), "insert_stmt", "insert into aliases (alias, source, user_id) VALUES ($1, $2, $3)")
 	if err != nil {
 		return fmt.Errorf("could not prepare statement: %w", err)
 	}
 
 	for key, value := range item {
-		_, err = tx.Exec(context.Background(), stmt.SQL, key, value)
+		_, err = tx.Exec(context.Background(), stmt.SQL, key, value, userID)
 		if err != nil {
 			return fmt.Errorf("could not set alias: %w", err)
 		}
@@ -84,7 +85,8 @@ func (p *PostgresStorage) row(ctx context.Context, column, value string) (models
 		&alias.Alias,
 		&alias.Source,
 		&alias.Quantity,
-		&alias.CreatedAt)
+		&alias.CreatedAt,
+		&alias.UserID)
 
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return alias, err
@@ -125,6 +127,46 @@ func (p *PostgresStorage) IsUniqError(err error) bool {
 	return false
 }
 
+func (p *PostgresStorage) RegisterUser(ctx context.Context) (int64, error) {
+	var newID int64
+	err := db.QueryRow(ctx, "insert into cookie_users DEFAULT VALUES returning id").Scan(&newID)
+	if err != nil {
+		return 0, err
+	}
+
+	return newID, nil
+}
+
+// UserAliases сокращения связанные с пользователем
+func (p *PostgresStorage) UserAliases(ctx context.Context, userID int64) ([]*models.Alias, error) {
+	var aliases []*models.Alias
+
+	rows, err := db.Query(ctx, "select * from aliases where user_id = $1", userID)
+	if err != nil {
+		return aliases, fmt.Errorf("could not get aliases from DB: %w", err)
+	}
+
+	createdAt := new(string)
+	for rows.Next() {
+		alias := &models.Alias{}
+
+		err = rows.Scan(&alias.Alias, &alias.Source, &alias.Quantity, &createdAt, &alias.UserID)
+		if err != nil {
+			return aliases, fmt.Errorf("could not scan row: %w", err)
+		}
+
+		var t time.Time
+		if t, err = time.Parse("06.02.01", *createdAt); err != nil {
+			return nil, err
+		}
+
+		alias.CreatedAt = t
+		aliases = append(aliases, alias)
+	}
+
+	return aliases, nil
+}
+
 func prepareDB(conn *pgxpool.Pool) error {
 	// проверка существования таблицы
 	var count int64
@@ -152,6 +194,17 @@ comment on table aliases is 'long to short and vice versa';
 create unique index aliases_source_uindex on aliases (source);
 
 comment on column aliases.quantity is 'redirects';
+
+create table if not exists cookie_users
+(
+    id serial8 primary key,
+    created_at timestamp default now()
+);
+
+comment on table aliases is 'cookie users';
+
+alter table aliases
+    add user_id bigint default 0;
 `)
 	if err != nil {
 		return fmt.Errorf("could not create table: %w", err)

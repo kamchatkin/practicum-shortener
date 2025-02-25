@@ -5,12 +5,18 @@ import (
 	"errors"
 	"fmt"
 	"github.com/kamchatkin/practicum-shortener/internal/models"
+	"math/rand"
 	"sync"
 	"time"
 )
 
 var memoryDB sync.Map
 var mems *MemStorage
+
+var (
+	linksMU sync.RWMutex
+	links   map[int64][]string
+)
 
 type UniqError error
 
@@ -34,7 +40,7 @@ func NewMemStorage() (*MemStorage, error) {
 	return mems, nil
 }
 
-func (m *MemStorage) Set(_ context.Context, key, value string) error {
+func (m *MemStorage) Set(_ context.Context, key, value string, userID int64) error {
 	uniqErr := false
 	memoryDB.Range(func(mKey, mValue any) bool {
 		if value == mValue {
@@ -50,14 +56,27 @@ func (m *MemStorage) Set(_ context.Context, key, value string) error {
 	}
 
 	memoryDB.Store(key, value)
+	linksMU.Lock()
+	if _, ok := links[userID]; !ok {
+		links[userID] = []string{}
+	}
+	links[userID] = append(links[userID], key)
+	linksMU.Unlock()
 
 	return nil
 }
 
-func (m *MemStorage) SetBatch(_ context.Context, item map[string]string) error {
+func (m *MemStorage) SetBatch(_ context.Context, item map[string]string, userID int64) error {
+	linksMU.Lock()
 	for key, value := range item {
 		memoryDB.Store(key, value)
+
+		if _, ok := links[userID]; !ok {
+			links[userID] = []string{}
+		}
+		links[userID] = append(links[userID], key)
 	}
+	linksMU.Unlock()
 
 	return nil
 }
@@ -84,8 +103,38 @@ func (m *MemStorage) GetBySource(_ context.Context, source string) (models.Alias
 	return m.asAlias(shortKey, source), nil
 }
 
+func (m *MemStorage) RegisterUser(_ context.Context) (int64, error) {
+	return rand.Int63(), nil
+}
+
+func (m *MemStorage) UserAliases(_ context.Context, userId int64) ([]*models.Alias, error) {
+	var aliases []*models.Alias
+
+	if userId < 0 {
+		return aliases, errors.New("invalid userId")
+	}
+
+	linksMU.RLock()
+	defer linksMU.RUnlock()
+
+	userShorts, ok := links[userId]
+	if !ok {
+		return aliases, nil
+	}
+
+	for _, uShort := range userShorts {
+		value, _ := memoryDB.Load(uShort)
+		alias := m.asAlias(uShort, value.(string))
+		aliases = append(aliases, &alias)
+	}
+
+	return aliases, nil
+}
+
 func (m *MemStorage) Incr() {}
 func (m *MemStorage) Open() error {
+	links = map[int64][]string{}
+	links[-1] = []string{"qwerty"}
 	return nil
 }
 func (m *MemStorage) Close() error {

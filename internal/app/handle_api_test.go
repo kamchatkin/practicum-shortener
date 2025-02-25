@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/stretchr/testify/assert"
 	"io"
@@ -62,7 +61,6 @@ func TestHandleAPI(t *testing.T) {
 			if tt.expectedBody {
 				resp := APIResponse{}
 				err := json.NewDecoder(response.Body).Decode(&resp)
-				fmt.Printf("\nerr %+v\n", err)
 				assert.NoError(t, err)
 
 				err = validate.Struct(resp)

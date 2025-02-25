@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"github.com/kamchatkin/practicum-shortener/internal/auth"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
 	"net/http"
@@ -53,7 +54,7 @@ func HandleAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	shortURL, err := makeAlias(ctx, db, alProps)
+	shortURL, err := makeAlias(ctx, db, alProps, auth.GetUserIDFromCookie(r))
 	if err != nil {
 		switch err {
 		case ErrUniq:

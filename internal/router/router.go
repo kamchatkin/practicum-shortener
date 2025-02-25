@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/kamchatkin/practicum-shortener/internal/app"
+	"github.com/kamchatkin/practicum-shortener/internal/router/middlewares/auth"
 	"github.com/kamchatkin/practicum-shortener/internal/router/middlewares/gzip"
 	"github.com/kamchatkin/practicum-shortener/internal/router/middlewares/log"
 	"net/http"
@@ -23,6 +24,8 @@ func Router() *chi.Mux {
 
 	r.Post("/api/shorten/batch", handleWrapper(app.HandleAPIBatch))
 
+	r.Get("/api/user/urls", handleWrapper(app.HandleAPIUserURLs))
+
 	r.Get("/ping", handleWrapper(app.HandlePing))
 
 	return r
@@ -33,6 +36,7 @@ func handleWrapper(next http.HandlerFunc) http.HandlerFunc {
 	mwsList := []func(next http.HandlerFunc) http.HandlerFunc{
 		log.WithLogging,
 		gzip.WithGzipped,
+		auth.WithAuth,
 	}
 
 	for _, middleware := range mwsList {

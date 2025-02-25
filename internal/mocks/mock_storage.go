@@ -139,30 +139,60 @@ func (mr *MockStorageMockRecorder) Ping(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockStorage)(nil).Ping), ctx)
 }
 
-// Set mocks base method.
-func (m *MockStorage) Set(ctx context.Context, key, value string) error {
+// RegisterUser mocks base method.
+func (m *MockStorage) RegisterUser(ctx context.Context) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Set", ctx, key, value)
+	ret := m.ctrl.Call(m, "RegisterUser", ctx)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RegisterUser indicates an expected call of RegisterUser.
+func (mr *MockStorageMockRecorder) RegisterUser(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterUser", reflect.TypeOf((*MockStorage)(nil).RegisterUser), ctx)
+}
+
+// Set mocks base method.
+func (m *MockStorage) Set(ctx context.Context, key, value string, userID int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Set", ctx, key, value, userID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Set indicates an expected call of Set.
-func (mr *MockStorageMockRecorder) Set(ctx, key, value any) *gomock.Call {
+func (mr *MockStorageMockRecorder) Set(ctx, key, value, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockStorage)(nil).Set), ctx, key, value)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockStorage)(nil).Set), ctx, key, value, userID)
 }
 
 // SetBatch mocks base method.
-func (m *MockStorage) SetBatch(ctx context.Context, item map[string]string) error {
+func (m *MockStorage) SetBatch(ctx context.Context, item map[string]string, userID int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetBatch", ctx, item)
+	ret := m.ctrl.Call(m, "SetBatch", ctx, item, userID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetBatch indicates an expected call of SetBatch.
-func (mr *MockStorageMockRecorder) SetBatch(ctx, item any) *gomock.Call {
+func (mr *MockStorageMockRecorder) SetBatch(ctx, item, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBatch", reflect.TypeOf((*MockStorage)(nil).SetBatch), ctx, item)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBatch", reflect.TypeOf((*MockStorage)(nil).SetBatch), ctx, item, userID)
+}
+
+// UserAliases mocks base method.
+func (m *MockStorage) UserAliases(ctx context.Context, userId int64) ([]*models.Alias, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserAliases", ctx, userId)
+	ret0, _ := ret[0].([]*models.Alias)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UserAliases indicates an expected call of UserAliases.
+func (mr *MockStorageMockRecorder) UserAliases(ctx, userId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserAliases", reflect.TypeOf((*MockStorage)(nil).UserAliases), ctx, userId)
 }
