@@ -51,6 +51,7 @@ func HandleAPIUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(aliases) == 0 {
+		logger.Info("no aliases for user", zap.Int64("userID", userID))
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
