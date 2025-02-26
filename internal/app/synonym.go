@@ -41,20 +41,17 @@ type aliasProps struct {
 }
 
 // makeAlias
-func makeAlias(ctx context.Context, db *storage.Storage, props *aliasProps) (string, error) {
+func makeAlias(ctx context.Context, db *storage.Storage, props *aliasProps, userID int64) (string, error) {
 	aliasKey, err := getShortCode(ctx, db)
 	if err != nil {
 		return "", fmt.Errorf("could not get short code for alias: %w", err)
 	}
 
-	err = data.Set(ctx, db, aliasKey, props.SourceURL)
+	err = data.Set(ctx, db, aliasKey, props.SourceURL, userID)
 	if err != nil {
 
 		if (*db).IsUniqError(err) {
-			fmt.Println("Uniq err")
-			fmt.Println("props.SourceURL", props.SourceURL)
 			origShortURL, err := SearchOriginalALias(ctx, db, props.SourceURL, props)
-			fmt.Printf("orig: %+v  err: %+v\n", origShortURL, err)
 			if err != nil {
 				return "", err
 			}
@@ -74,8 +71,6 @@ func SearchOriginalALias(ctx context.Context, db *storage.Storage, sourceURL str
 	if err != nil {
 		return "", err
 	}
-
-	fmt.Printf("%+v\t => \t%+v", alias, err)
 
 	return getShortURL(alias.Alias, props), nil
 }

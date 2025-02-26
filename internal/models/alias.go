@@ -9,6 +9,7 @@ type Alias struct {
 	Source    string
 	Quantity  int64
 	CreatedAt time.Time
+	UserID    int64
 }
 
 // Redirected засчет редиректа в стату

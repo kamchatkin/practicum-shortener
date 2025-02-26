@@ -54,7 +54,7 @@ func Test_SynonymMakeAlias(t *testing.T) {
 		SourceURL: "http://jj.ru/",
 		HTTPS:     false,
 		Host:      "jj:30001",
-	})
+	}, -1)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, alias)

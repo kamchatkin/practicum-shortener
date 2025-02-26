@@ -17,9 +17,9 @@ var dbRef Storage
 // Storage интерфейс описывающий требования к хранилищу
 type Storage interface {
 	// Set запись в хранилище
-	Set(ctx context.Context, key string, value string) error
+	Set(ctx context.Context, key string, value string, userID int64) error
 
-	SetBatch(ctx context.Context, item map[string]string) error
+	SetBatch(ctx context.Context, item map[string]string, userID int64) error
 
 	// Get Получает данные из хранилища по ключу
 	Get(ctx context.Context, key string) (models.Alias, error)
@@ -40,6 +40,10 @@ type Storage interface {
 	Ping(ctx context.Context) error
 
 	IsUniqError(err error) bool
+
+	RegisterUser(ctx context.Context) (int64, error)
+
+	UserAliases(ctx context.Context, userID int64) ([]*models.Alias, error)
 }
 
 func NewStorage() (*Storage, error) {
