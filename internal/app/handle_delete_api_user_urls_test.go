@@ -30,6 +30,7 @@ func TestHandleDeleteAPIUserURLs(t *testing.T) {
 			HandleDeleteAPIUserURLs(w, r)
 
 			response := w.Result()
+			defer response.Body.Close()
 
 			assert.Equal(t, tt.expCode, response.StatusCode)
 		})
