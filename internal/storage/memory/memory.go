@@ -158,3 +158,7 @@ func (m *MemStorage) Ping(_ context.Context) error {
 func (m *MemStorage) IsUniqError(err error) bool {
 	return errors.Is(err, UniqError(err))
 }
+
+func (m *MemStorage) UserBatchUpdate(_ context.Context, _ chan string, _ int64) error {
+	return nil
+}

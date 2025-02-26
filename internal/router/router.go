@@ -28,6 +28,8 @@ func Router() *chi.Mux {
 
 	r.Get("/api/user/urls", handleWrapper(app.HandleAPIUserURLs))
 
+	r.Delete("/api/user/urls", handleWrapper(app.HandleDeleteAPIUserURLs))
+
 	r.Get("/ping", handleWrapper(app.HandlePing))
 
 	return r

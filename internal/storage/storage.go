@@ -44,6 +44,8 @@ type Storage interface {
 	RegisterUser(ctx context.Context) (int64, error)
 
 	UserAliases(ctx context.Context, userID int64) ([]*models.Alias, error)
+
+	UserBatchUpdate(ctx context.Context, shortsCh chan string, userID int64) error
 }
 
 func NewStorage() (*Storage, error) {

@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/jackc/pgerrcode"
@@ -11,6 +12,7 @@ import (
 	"github.com/kamchatkin/practicum-shortener/config"
 	"github.com/kamchatkin/practicum-shortener/internal/models"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -81,19 +83,38 @@ func (p *PostgresStorage) GetBySource(ctx context.Context, source string) (model
 
 func (p *PostgresStorage) row(ctx context.Context, column, value string) (models.Alias, error) {
 	var alias = models.Alias{}
-	sql := fmt.Sprintf("SELECT * FROM aliases WHERE %s = $1", column)
+	var createdAt sql.NullString
+	var deletedAt sql.NullString
+	sql := fmt.Sprintf("SELECT alias, source, quantity, created_at::text, user_id, deleted_at::text FROM aliases WHERE %s = $1", column)
 	err := db.QueryRow(ctx, sql, value).Scan(
 		&alias.Alias,
 		&alias.Source,
 		&alias.Quantity,
-		&alias.CreatedAt,
-		&alias.UserID)
+		&createdAt,
+		&alias.UserID,
+		&deletedAt)
 
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return alias, err
 	}
 
+	alias.CreatedAt = scanDateField(createdAt)
+	alias.DeletedAt = scanDateField(deletedAt)
+
 	return alias, nil
+}
+
+func scanDateField(at sql.NullString) time.Time {
+	if !at.Valid {
+		return time.Time{}
+	}
+
+	t, err := time.Parse("2006-01-02", strings.Split(at.String, " ")[0])
+	if err != nil {
+		return time.Time{}
+	}
+
+	return t
 }
 
 func (p *PostgresStorage) Incr() {}
@@ -142,7 +163,7 @@ func (p *PostgresStorage) RegisterUser(ctx context.Context) (int64, error) {
 func (p *PostgresStorage) UserAliases(ctx context.Context, userID int64) ([]*models.Alias, error) {
 	var aliases []*models.Alias
 
-	rows, err := db.Query(ctx, "select alias, source, quantity, created_at::text, user_id from aliases where user_id = $1", userID)
+	rows, err := db.Query(ctx, "select alias, source, quantity, created_at::text, user_id from aliases where user_id = $1 and deleted_at is null", userID)
 	if err != nil {
 		return aliases, fmt.Errorf("could not get aliases from DB: %w", err)
 	}
@@ -166,6 +187,34 @@ func (p *PostgresStorage) UserAliases(ctx context.Context, userID int64) ([]*mod
 	}
 
 	return aliases, nil
+}
+
+// UserBatchUpdate Обновление
+func (p *PostgresStorage) UserBatchUpdate(ctx context.Context, shortsCh chan string, userID int64) error {
+	var wg sync.WaitGroup
+	batch := &pgx.Batch{}
+	for short := range shortsCh {
+		wg.Add(1)
+		go func() {
+			batch.Queue("update aliases set deleted_at = $1 where alias = $2 and user_id = $3", time.Now(), short, userID)
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+
+	tx, err := db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("could not begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	err = tx.SendBatch(ctx, batch).Close()
+	if err != nil {
+		return fmt.Errorf("could not send batch: %w", err)
+	}
+
+	return tx.Commit(ctx)
+
 }
 
 func prepareDB(conn *pgxpool.Pool) error {
@@ -206,6 +255,9 @@ comment on table aliases is 'cookie users';
 
 alter table aliases
     add user_id bigint default 0;
+
+alter table aliases
+    add column deleted_at timestamp;
 `)
 	if err != nil {
 		return fmt.Errorf("could not create table: %w", err)

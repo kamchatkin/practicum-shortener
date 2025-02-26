@@ -32,6 +32,12 @@ func RedirectHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	fmt.Printf("\n////////////\n%+v\n/////////////\n", alias)
+
+	if alias.IsDeleted() {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
 
 	if alias.NotFound() {
 		w.WriteHeader(http.StatusNotFound)
