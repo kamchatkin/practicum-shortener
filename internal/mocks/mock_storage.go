@@ -196,3 +196,17 @@ func (mr *MockStorageMockRecorder) UserAliases(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserAliases", reflect.TypeOf((*MockStorage)(nil).UserAliases), ctx, userID)
 }
+
+// UserBatchUpdate mocks base method.
+func (m *MockStorage) UserBatchUpdate(ctx context.Context, shortsCh chan string, userID int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserBatchUpdate", ctx, shortsCh, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UserBatchUpdate indicates an expected call of UserBatchUpdate.
+func (mr *MockStorageMockRecorder) UserBatchUpdate(ctx, shortsCh, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserBatchUpdate", reflect.TypeOf((*MockStorage)(nil).UserBatchUpdate), ctx, shortsCh, userID)
+}

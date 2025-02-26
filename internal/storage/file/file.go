@@ -229,3 +229,7 @@ func (f *FileStorage) Ping(_ context.Context) error {
 func (f *FileStorage) IsUniqError(err error) bool {
 	return errors.Is(err, UniqError(err))
 }
+
+func (f *FileStorage) UserBatchUpdate(_ context.Context, _ chan string, _ int64) error {
+	return nil
+}

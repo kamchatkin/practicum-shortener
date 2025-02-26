@@ -10,6 +10,7 @@ type Alias struct {
 	Quantity  int64
 	CreatedAt time.Time
 	UserID    int64
+	DeletedAt time.Time
 }
 
 // Redirected засчет редиректа в стату
@@ -24,4 +25,8 @@ func (a *Alias) Found() bool {
 
 func (a *Alias) NotFound() bool {
 	return a.Alias == ""
+}
+
+func (a *Alias) IsDeleted() bool {
+	return !a.DeletedAt.IsZero()
 }

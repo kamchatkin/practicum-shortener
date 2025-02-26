@@ -7,7 +7,6 @@ import (
 	"github.com/kamchatkin/practicum-shortener/internal/data"
 	"github.com/kamchatkin/practicum-shortener/internal/logs"
 	"github.com/kamchatkin/practicum-shortener/internal/storage"
-	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -25,7 +24,6 @@ func HandleAPIUserURLs(w http.ResponseWriter, r *http.Request) {
 	logger := logs.NewLogger()
 
 	userID := auth.GetUserIDFromCookie(r)
-	logger.Info("userID", zap.Int64("userID", userID))
 	if userID < 1 {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -51,7 +49,6 @@ func HandleAPIUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(aliases) == 0 {
-		logger.Info("no aliases for user", zap.Int64("userID", userID))
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
